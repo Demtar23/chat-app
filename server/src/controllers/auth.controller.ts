@@ -1,19 +1,14 @@
 import { Request, Response } from 'express';
 import { usersService } from '../services/auth.service';
+import { jwt } from '../utils/jwt';
 
 async function register(req: Request, res: Response) {
   const { username, password } = req.body;
 
-  if (!username || !password) {
-    return res.status(400).json({
-      message: 'Missing fields',
-    });
-  }
-
   const isUserExist = await usersService.findUserByUsername(username);
 
   if (isUserExist) {
-    return res.status(400).json({
+    return res.status(409).json({
       message: 'User already exists',
     });
   }
@@ -29,6 +24,47 @@ async function register(req: Request, res: Response) {
   });
 }
 
+async function login(req: Request, res: Response) {
+  const { username, password } = req.body;
+
+  const user = await usersService.findUserByUsername(username);
+
+  if (!user) {
+    return res.status(401).json({
+      message: 'Invalid credentials',
+    });
+  }
+
+  const isPasswordValid = await usersService.validatePassword(
+    password,
+    user.passwordHash,
+  );
+
+  if (!isPasswordValid) {
+    return res.status(401).json({
+      message: 'Invalid credentials',
+    });
+  }
+
+  const payload = {
+    id: user._id.toString(),
+    username: user.username,
+  };
+
+  const accessToken = jwt.generateAccessToken(payload);
+  const refreshToken = jwt.generateRefreshToken(payload);
+
+  return res.status(200).json({
+    user: {
+      id: user._id,
+      username: user.username,
+    },
+    accessToken,
+    refreshToken,
+  });
+}
+
 export const authController = {
   register,
+  login,
 };

@@ -10,7 +10,12 @@ async function createUser(username: string, password: string) {
   return User.create({ username, passwordHash: hashedPassword });
 }
 
+async function validatePassword(password: string, passwordHash: string) {
+  return bcrypt.compare(password, passwordHash);
+}
+
 export const usersService = {
   findUserByUsername,
   createUser,
+  validatePassword,
 };
