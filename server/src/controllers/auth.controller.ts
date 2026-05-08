@@ -54,17 +54,72 @@ async function login(req: Request, res: Response) {
   const accessToken = jwt.generateAccessToken(payload);
   const refreshToken = jwt.generateRefreshToken(payload);
 
+  res.cookie('refreshToken', refreshToken, {
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    httpOnly: true,
+    sameSite: 'none',
+    secure: process.env.NODE_ENV === 'production',
+  });
+
   return res.status(200).json({
     user: {
       id: user._id,
       username: user.username,
     },
     accessToken,
-    refreshToken,
   });
+}
+
+async function refresh(req: Request, res: Response) {
+  const refreshToken = req.cookies?.refreshToken ?? '';
+
+  if (!refreshToken) {
+    return res.status(401).json({
+      message: 'No refresh token',
+    });
+  }
+
+  const userData = jwt.validateRefreshToken(refreshToken);
+
+  if (!userData) {
+    res.clearCookie('refreshToken');
+
+    return res.status(401).json({
+      message: 'Invalid token',
+    });
+  }
+
+  const user = await usersService.findUserByUsername(userData.username);
+
+  if (!user) {
+    res.clearCookie('refreshToken');
+
+    return res.status(401).json({
+      message: 'User not found',
+    });
+  }
+
+  const payload = {
+    id: user._id.toString(),
+    username: user.username,
+  };
+
+  const accessToken = jwt.generateAccessToken(payload);
+
+  return res.status(200).json({
+    accessToken,
+  });
+}
+
+async function logout(req: Request, res: Response) {
+  res.clearCookie('refreshToken');
+
+  return res.sendStatus(204);
 }
 
 export const authController = {
   register,
   login,
+  refresh,
+  logout,
 };

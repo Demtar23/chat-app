@@ -8,6 +8,7 @@
     "client",
     "server"
   ],
+  "type": "module",
   "scripts": {
     "check": "eslint .",
     "lint:fix": "eslint . --fix",
