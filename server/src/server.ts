@@ -1,10 +1,24 @@
+import http from 'http';
+import { Server } from 'socket.io';
 import dotenv from 'dotenv';
 import { app } from './app';
 import { connectDB } from './config/db';
+import { initSocket } from './socket/socket';
 
 dotenv.config();
 
 const PORT = process.env.PORT || 5000;
+
+const httpServer = http.createServer(app);
+
+const io = new Server(httpServer, {
+  cors: {
+    origin: 'http://localhost:5173',
+    credentials: true,
+  },
+});
+
+initSocket(io);
 
 async function start() {
   try {
@@ -14,9 +28,9 @@ async function start() {
       res.json({ status: 'ok' });
     });
 
-    app.listen(PORT, () => {
+    httpServer.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
-    })
+    });
   } catch (error) {
     console.error('Server failed to start:', error);
   }
