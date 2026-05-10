@@ -1,9 +1,9 @@
-import { ExtendedError } from 'socket.io';
-import { AuthenticatedSocket } from '../types/socket';
+import { ExtendedError, Socket } from 'socket.io';
+import { SocketWithUser } from '../types/socket';
 import { jwt } from '../utils/jwt';
 
 export function socketAuth(
-  socket: AuthenticatedSocket,
+  socket: Socket,
   next: (err?: ExtendedError) => void,
 ) {
   const token = socket.handshake.auth.token;
@@ -18,7 +18,7 @@ export function socketAuth(
     return next(new Error('Invalid token'));
   }
 
-  socket.user = {
+  (socket as SocketWithUser).user = {
     id: user.id,
     username: user.username,
   };

@@ -1,8 +1,10 @@
 import { Socket } from 'socket.io';
 
-export interface AuthenticatedSocket extends Socket {
-  user?: {
-    id: string;
-    username: string;
-  };
+export type UserPayload = {
+  id: string;
+  username: string;
+};
+
+export interface SocketWithUser extends Socket {
+  user: UserPayload;
 }

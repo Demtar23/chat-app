@@ -1,28 +1,36 @@
 import { Server } from 'socket.io';
 import { socketAuth } from './socketAuth';
-import { AuthenticatedSocket } from '../types/socket';
 import { onlineUsers } from '../state/onlineUsers';
+import { SendMessageData } from '../types/message';
+import { SocketWithUser } from '../types/socket';
+import { messageHandler } from './handlers/message.handler';
 
 export function initSocket(io: Server) {
   io.use(socketAuth);
 
-  io.on('connection', (socket: AuthenticatedSocket) => {
-    if (!socket.user) {
+  io.on('connection', (socket) => {
+    const authSocket = socket as SocketWithUser;
+
+    const user = authSocket.user;
+
+    if (!user) {
       return;
     }
 
-    onlineUsers.set(socket.user.id, {
-      userId: socket.user.id,
-      userName: socket.user.username,
-      socketId: socket.id,
+    onlineUsers.set(user.id, {
+      userId: user.id,
+      userName: user.username,
+      socketId: authSocket.id,
     });
 
     io.emit('online_users', Array.from(onlineUsers.values()));
 
     console.log('Online users:', Array.from(onlineUsers.values()));
 
+    messageHandler(io, authSocket);
+
     socket.on('disconnect', () => {
-      onlineUsers.delete(socket.user!.id);
+      onlineUsers.delete(user.id);
 
       io.emit('online_users', Array.from(onlineUsers.values()));
 

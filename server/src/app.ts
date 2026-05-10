@@ -5,6 +5,7 @@ import 'dotenv/config';
 import { errorMiddleware } from './middlewares/errorMiddleware';
 import { authRouter } from './routes/authRouter';
 import { userRouter } from './routes/userRouter';
+import { messageRouter } from './routes/messageRouter';
 
 export const app = express();
 
@@ -22,5 +23,7 @@ app.use(cookieParser());
 app.use('/api', authRouter);
 
 app.use('/api/user', userRouter);
+
+app.use('/api/messages', messageRouter);
 
 app.use(errorMiddleware);
