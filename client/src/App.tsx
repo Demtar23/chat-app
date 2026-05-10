@@ -1,34 +1,44 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { io } from 'socket.io-client';
+import type { OnlineUser } from './types/socket';
+
+const accessToken = prompt('Enter token') || '';
+
+const socket = io('http://localhost:5000', {
+  withCredentials: true,
+
+  auth: {
+    token: accessToken,
+  },
+});
 
 function App() {
+  const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
+
   useEffect(() => {
-    const socket = io('http://localhost:5000', {
-      withCredentials: true,
+    socket.on('online_users', (users: OnlineUser[]) => {
+      console.log(users);
 
-      auth: {
-        token:
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5ZmM2NWZjNmY5ZDIwZWIxMmNiY2Y0YSIsInVzZXJuYW1lIjoidGVzdDEiLCJpYXQiOjE3NzgyMjUyMDcsImV4cCI6MTc3ODIyNTgwN30.vLrJDqO5snMC2Dz7ALVohSV_ZmawTfUwq1j4iKM9slc',
-      },
-    });
-
-    socket.on('connect', () => {
-      console.log('Connected:', socket.id);
-    });
-
-    socket.on('disconnect', () => {
-      console.log('Disconnected');
+      setOnlineUsers(users);
     });
 
     return () => {
-      socket.disconnect();
+      socket.off('online_users');
     };
   }, []);
 
   return (
     <div className="h-screen flex items-center justify-center">
       <h1 className="text-2xl font-bold">Chat App</h1>
+
+      <div className="space-y-3">
+        {onlineUsers.map((user) => (
+          <div key={user.socketId} className="border rounded-x1">
+            {user.userName}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

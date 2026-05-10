@@ -1,15 +1,32 @@
 import { Server } from 'socket.io';
 import { socketAuth } from './socketAuth';
 import { AuthenticatedSocket } from '../types/socket';
+import { onlineUsers } from '../state/onlineUsers';
 
 export function initSocket(io: Server) {
   io.use(socketAuth);
 
   io.on('connection', (socket: AuthenticatedSocket) => {
-    console.log(`User connected: ${socket.user?.username}`);
+    if (!socket.user) {
+      return;
+    }
+
+    onlineUsers.set(socket.user.id, {
+      userId: socket.user.id,
+      userName: socket.user.username,
+      socketId: socket.id,
+    });
+
+    io.emit('online_users', Array.from(onlineUsers.values()));
+
+    console.log('Online users:', Array.from(onlineUsers.values()));
 
     socket.on('disconnect', () => {
-      console.log(`User disconnected: ${socket.user?.username}`);
+      onlineUsers.delete(socket.user!.id);
+
+      io.emit('online_users', Array.from(onlineUsers.values()));
+
+      console.log('Online users', Array.from(onlineUsers.values()));
     });
   });
 }
