@@ -1,7 +1,6 @@
 import { Server } from 'socket.io';
 import { socketAuth } from './socketAuth';
 import { onlineUsers } from '../state/onlineUsers';
-import { SendMessageData } from '../types/message';
 import { SocketWithUser } from '../types/socket';
 import { messageHandler } from './handlers/message.handler';
 
@@ -28,6 +27,10 @@ export function initSocket(io: Server) {
     console.log('Online users:', Array.from(onlineUsers.values()));
 
     messageHandler(io, authSocket);
+
+    socket.on('users:get', () => {
+      socket.emit('online_users', Array.from(onlineUsers.values()));
+    });
 
     socket.on('disconnect', () => {
       onlineUsers.delete(user.id);

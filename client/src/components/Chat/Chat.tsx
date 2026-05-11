@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { fetchMessages } from '../../api/messages.api';
 import { getSocket } from '../../services/socket';
+import { useAuth } from '../../context/AuthContext';
 import { TopBar } from './components/TopBar';
 import { Sidebar } from './components/Sidebar';
 import { MessageList } from './components/MessageList';
@@ -20,43 +21,67 @@ type OnlineUser = {
   socketId: string;
 };
 
-type Props = {
-  accessToken: string;
-};
-
-export function Chat({ accessToken }: Props) {
+export function Chat() {
+  const { accessToken } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
   const [isDark, setIsDark] = useState(true);
 
   useEffect(() => {
-    fetchMessages(accessToken).then((data) => setMessages(data));
+    if (!accessToken) {
+      return;
+    }
+
+    fetchMessages(accessToken).then(setMessages);
 
     const socket = getSocket();
-    if (!socket) return;
+    if (!socket) {
+      return;
+    }
 
-    socket.on('receive_message', (message: Message) => {
+    socket.on('receive_message', (message) => {
       setMessages((prev) => [...prev, message]);
     });
 
-    socket.on('online_users', (users: OnlineUser[]) => {
-      setOnlineUsers(users);
-    });
+    socket.on('online_users', setOnlineUsers);
+
+    const requestUsers = () => {
+      socket.emit('users:get');
+    };
+
+    socket.once('connect', requestUsers);
+
+    if (socket.connected) {
+      requestUsers();
+    }
 
     return () => {
       socket.off('receive_message');
       socket.off('online_users');
+      socket.off('connect');
     };
   }, [accessToken]);
 
   function sendMessage(text: string) {
     const socket = getSocket();
-    if (!socket) return;
+    if (!socket) {
+      return;
+    }
     socket.emit('send_message', { text });
   }
 
+  if (!accessToken) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-[#1e1f22]">
+        <span className="text-gray-400 text-sm">Connecting...</span>
+      </div>
+    );
+  }
+
   return (
-    <div className={`h-screen flex flex-col ${isDark ? 'bg-[#1e1f22]' : 'bg-white'}`}>
+    <div
+      className={`h-screen flex flex-col ${isDark ? 'bg-[#1e1f22]' : 'bg-white'}`}
+    >
       <TopBar
         onlineCount={onlineUsers.length}
         isDark={isDark}

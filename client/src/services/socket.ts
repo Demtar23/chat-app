@@ -7,11 +7,17 @@ export function connectSocket(token: string): Socket {
     return socket;
   }
 
-  socket = io('http://localhost:5000', {
-    withCredentials: true,
+  if (socket) {
+    socket.removeAllListeners();
+    socket.disconnect();
+    socket = null;
+  }
 
+  socket = io('http://localhost:5000', {
+    transports: ['websocket'],
+    withCredentials: true,
     auth: {
-      token: token,
+      token,
     },
   });
 
@@ -24,6 +30,5 @@ export function getSocket(): Socket | null {
 
 export function disconnectSocket() {
   socket?.disconnect();
-
   socket = null;
 }

@@ -15,12 +15,28 @@ async function register(req: Request, res: Response) {
 
   const user = await usersService.createUser(username, password);
 
+  const payload = {
+    id: user._id.toString(),
+    username: user.username,
+  };
+
+  const accessToken = jwt.generateAccessToken(payload);
+  const refreshToken = jwt.generateRefreshToken(payload);
+
+  res.cookie('refreshToken', refreshToken, {
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    httpOnly: true,
+    sameSite: 'none',
+    secure: process.env.NODE_ENV === 'production',
+  });
+
   return res.status(201).json({
     message: 'User created',
     user: {
       id: user._id,
       username: user.username,
     },
+    accessToken,
   });
 }
 
@@ -82,7 +98,11 @@ async function refresh(req: Request, res: Response) {
   const userData = jwt.validateRefreshToken(refreshToken);
 
   if (!userData) {
-    res.clearCookie('refreshToken');
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      sameSite: 'none',
+      secure: process.env.NODE_ENV === 'production',
+    });
 
     return res.status(401).json({
       message: 'Invalid token',
@@ -92,7 +112,11 @@ async function refresh(req: Request, res: Response) {
   const user = await usersService.findUserByUsername(userData.username);
 
   if (!user) {
-    res.clearCookie('refreshToken');
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      sameSite: 'none',
+      secure: process.env.NODE_ENV === 'production',
+    });
 
     return res.status(401).json({
       message: 'User not found',
@@ -107,12 +131,20 @@ async function refresh(req: Request, res: Response) {
   const accessToken = jwt.generateAccessToken(payload);
 
   return res.status(200).json({
+    user: {
+      id: user._id,
+      username: user.username,
+    },
     accessToken,
   });
 }
 
 async function logout(req: Request, res: Response) {
-  res.clearCookie('refreshToken');
+  res.clearCookie('refreshToken', {
+    httpOnly: true,
+    sameSite: 'none',
+    secure: process.env.NODE_ENV === 'production',
+  });
 
   return res.sendStatus(204);
 }
