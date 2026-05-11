@@ -1,6 +1,6 @@
 import { connectSocket } from './services/socket';
 
-import { Chat } from './components/Chat';
+import { Chat } from './components/Chat/Chat';
 
 const accessToken = prompt('Enter token') || '';
 
