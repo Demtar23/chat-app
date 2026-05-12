@@ -6,6 +6,7 @@ import { TopBar } from './components/TopBar';
 import { Sidebar } from './components/Sidebar';
 import { MessageList } from './components/MessageList';
 import { MessageInput } from './components/MessageInput';
+import { TypingIndicator } from './components/TypingIndicator';
 
 type Message = {
   _id: string;
@@ -26,6 +27,7 @@ export function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
   const [isDark, setIsDark] = useState(true);
+  const [typingUsers, setTypingUsers] = useState<string[]>([]);
 
   useEffect(() => {
     if (!accessToken) {
@@ -51,6 +53,16 @@ export function Chat() {
 
     socket.once('connect', requestUsers);
 
+    socket.on('typing:update', ({ username, isTyping }) => {
+      setTypingUsers((prev) =>
+        isTyping
+          ? prev.includes(username)
+            ? prev
+            : [...prev, username]
+          : prev.filter((u) => u !== username),
+      );
+    });
+
     if (socket.connected) {
       requestUsers();
     }
@@ -59,6 +71,7 @@ export function Chat() {
       socket.off('receive_message');
       socket.off('online_users');
       socket.off('connect');
+      socket.off('typing:update');
     };
   }, [accessToken]);
 
@@ -91,6 +104,7 @@ export function Chat() {
         <Sidebar users={onlineUsers} isDark={isDark} />
         <div className="flex flex-col flex-1 overflow-hidden">
           <MessageList messages={messages} isDark={isDark} />
+          <TypingIndicator typingUsers={typingUsers} isDark={isDark} />
           <MessageInput onSend={sendMessage} isDark={isDark} />
         </div>
       </div>

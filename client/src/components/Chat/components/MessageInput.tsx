@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { getSocket } from '../../../services/socket';
 
 type Props = {
   onSend: (text: string) => void;
@@ -8,17 +9,52 @@ type Props = {
 export function MessageInput({ onSend, isDark }: Props) {
   const [text, setText] = useState('');
 
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function handleTyping(value: string) {
+    setText(value);
+
+    const socket = getSocket();
+
+    if (!socket) {
+      return;
+    }
+
+    socket.emit('typing:start');
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+      socket.emit('typing:stop');
+    }, 5000); //для тестів 5 секунд, потім залишу 1-2 секунди
+  }
+
   function handleSend() {
     if (!text.trim()) return;
+
+    const socket = getSocket();
+
+    if (socket) {
+      socket.emit('typing:stop');
+    }
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
     onSend(text);
     setText('');
   }
 
   return (
-    <div className={`px-4 py-3 border-t flex items-center gap-3 flex-shrink-0 ${isDark ? 'bg-[#313338] border-[#1e1f22]' : 'bg-white border-gray-200'}`}>
+    <div
+      className={`px-4 py-3 border-t flex items-center gap-3 flex-shrink-0 ${isDark ? 'bg-[#313338] border-[#1e1f22]' : 'bg-white border-gray-200'}`}
+    >
       <input
         value={text}
-        onChange={(e) => setText(e.target.value)}
+        onChange={(e) => handleTyping(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && handleSend()}
         placeholder="Написати в #global"
         className={`flex-1 rounded-lg px-4 py-2.5 text-sm outline-none ${isDark ? 'bg-[#383a40] text-[#dbdee1] placeholder-gray-500' : 'bg-gray-100 text-gray-900 placeholder-gray-400'}`}
