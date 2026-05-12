@@ -6,7 +6,19 @@ import { authMiddleware } from '../middlewares/auth.middleware';
 export const messageRouter = Router();
 
 messageRouter.get(
-  '/',
+  '/global',
   authMiddleware,
-  catchError(messagesController.getMessages),
+  catchError(messagesController.getGlobalMessages),
+);
+
+messageRouter.get(
+  '/room/:roomId',
+  authMiddleware,
+  catchError(messagesController.getRoomMessages),
+);
+
+messageRouter.get(
+  '/private/:userId',
+  authMiddleware,
+  catchError(messagesController.getPrivateMessages),
 );

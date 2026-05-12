@@ -1,15 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { jwt } from '../utils/jwt';
 
-type AuthRequest = Request & {
-  user?: {
-    id: string;
-    username: string;
-  };
-};
-
 export function authMiddleware(
-  req: AuthRequest,
+  req: Request,
   res: Response,
   next: NextFunction,
 ) {

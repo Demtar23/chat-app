@@ -6,6 +6,7 @@ import { errorMiddleware } from './middlewares/errorMiddleware';
 import { authRouter } from './routes/authRouter';
 import { userRouter } from './routes/userRouter';
 import { messageRouter } from './routes/messageRouter';
+import { roomRouter } from './routes/roomRouter';
 
 export const app = express();
 
@@ -25,5 +26,7 @@ app.use('/api', authRouter);
 app.use('/api/user', userRouter);
 
 app.use('/api/messages', messageRouter);
+
+app.use('/api/rooms', roomRouter);
 
 app.use(errorMiddleware);
