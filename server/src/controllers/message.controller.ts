@@ -30,8 +30,31 @@ async function getPrivateMessages(req: Request, res: Response) {
   return res.status(200).json(messages);
 }
 
+async function reactToMessage(req: Request, res: Response) {
+  const messageId = req.params.messageId as string;
+  const { emoji } = req.body;
+  const { id: userId } = req.user!;
+
+  if (!emoji) {
+    return res.status(400).json({ message: 'Emoji is required' });
+  }
+
+  const message = await messagesService.toggleReaction(
+    messageId,
+    emoji,
+    userId,
+  );
+
+  if (!message) {
+    return res.status(404).json({ message: 'Message not found' });
+  }
+
+  return res.status(200).json(message);
+}
+
 export const messagesController = {
   getGlobalMessages,
   getRoomMessages,
   getPrivateMessages,
+  reactToMessage,
 };

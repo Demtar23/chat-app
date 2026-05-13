@@ -55,10 +55,43 @@ async function getAllMessages() {
   });
 }
 
+async function toggleReaction(
+  messageId: string,
+  emoji: string,
+  userId: string,
+) {
+  const message = await Message.findById(messageId);
+
+  if (!message) {
+    return null;
+  }
+
+  const reactionIndex = message.reactions.findIndex((r) => r.emoji === emoji);
+
+  if (reactionIndex !== -1) {
+    const reaction = message.reactions[reactionIndex];
+
+    if (reaction.users.includes(userId)) {
+      reaction.users = reaction.users.filter((id) => id !== userId);
+
+      if (reaction.users.length === 0) {
+        message.reactions.splice(reactionIndex, 1);
+      }
+    } else {
+      reaction.users.push(userId);
+    }
+  } else {
+    message.reactions.push({ emoji, users: [userId] });
+  }
+
+  return message.save();
+}
+
 export const messagesService = {
   createMessage,
   getAllMessages,
   getGlobalMessages,
   getRoomMessages,
   getPrivateMessages,
+  toggleReaction,
 };

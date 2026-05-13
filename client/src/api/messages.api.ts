@@ -9,6 +9,10 @@ export type Message = {
   roomId?: string;
   receiverId?: string;
   createdAt: string;
+  reactions: {
+    emoji: string;
+    users: string[];
+  }[];
 };
 
 export async function fetchGlobalMessages(
@@ -56,6 +60,27 @@ export async function fetchPrivateMessages(
 
   if (!res.ok) {
     throw new Error('Failed to fetch private messages');
+  }
+
+  return res.json();
+}
+
+export async function toggleReaction(
+  token: string,
+  messageId: string,
+  emoji: string,
+): Promise<Message> {
+  const res = await fetch(`${API_URL}/messages/${messageId}/react`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ emoji }),
+  });
+
+  if (!res.ok) {
+    throw new Error('Failed to toggle reaction');
   }
 
   return res.json();

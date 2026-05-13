@@ -74,10 +74,14 @@ export function ChatPage() {
 
   // socket слухачі
   useEffect(() => {
-    if (!accessToken) return;
+    if (!accessToken) {
+      return;
+    }
 
     const socket = getSocket();
-    if (!socket) return;
+    if (!socket) {
+      return;
+    }
 
     socket.on('online_users', setOnlineUsers);
 
@@ -132,6 +136,12 @@ export function ChatPage() {
       setRooms((prev) => [...prev, room]);
     });
 
+    socket.on('reaction:updated', (updatedMessage: Message) => {
+      setMessages((prev) =>
+        prev.map((m) => (m._id === updatedMessage._id ? updatedMessage : m)),
+      );
+    });
+
     if (socket.connected) {
       socket.emit('users:get');
     } else {
@@ -145,6 +155,7 @@ export function ChatPage() {
       socket.off('private:receive');
       socket.off('typing:update');
       socket.off('room:created');
+      socket.off('reaction:updated');
     };
   }, [accessToken, activeChat]);
 
@@ -184,7 +195,19 @@ export function ChatPage() {
     return `@ ${activeChat.username}`;
   }
 
-  if (!accessToken || !user) return null;
+  async function handleReact(messageId: string, emoji: string) {
+    if (!accessToken) {
+      return;
+    }
+
+    const socket = getSocket();
+
+    socket?.emit('reaction:toggle', { messageId, emoji });
+  }
+
+  if (!accessToken || !user) {
+    return null;
+  }
 
   return (
     <div
@@ -211,7 +234,12 @@ export function ChatPage() {
           onCreateRoom={() => setShowCreateRoom(true)}
         />
         <div className="flex flex-col flex-1 overflow-hidden">
-          <MessageList messages={messages} isDark={isDark} />
+          <MessageList
+            messages={messages}
+            isDark={isDark}
+            currentUserId={user.id}
+            onReact={handleReact}
+          />
           <TypingIndicator typingUsers={typingUsers} isDark={isDark} />
           <MessageInput
             key={

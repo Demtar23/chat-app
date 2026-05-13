@@ -1,5 +1,19 @@
 import { model, Schema } from 'mongoose';
 
+const reactionSchema = new Schema(
+  {
+    emoji: {
+      type: String,
+      required: true,
+    },
+    users: {
+      type: [String],
+      default: [],
+    },
+  },
+  { _id: false },
+);
+
 const messageSchema = new Schema(
   {
     text: {
@@ -34,6 +48,11 @@ const messageSchema = new Schema(
     receiverId: {
       type: String,
       default: null,
+    },
+
+    reactions: {
+      type: [reactionSchema],
+      default: [],
     },
   },
 

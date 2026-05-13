@@ -5,6 +5,7 @@ import { SocketWithUser } from '../types/socket';
 import { messageHandler } from './handlers/message.handler';
 import { typingHandler } from './handlers/typing.handler';
 import { roomHandler } from './handlers/room.handler';
+import { reactionHandler } from './handlers/reaction.handler';
 
 export function initSocket(io: Server) {
   io.use(socketAuth);
@@ -31,6 +32,7 @@ export function initSocket(io: Server) {
     messageHandler(io, authSocket);
     typingHandler(io, authSocket);
     roomHandler(io, authSocket);
+    reactionHandler(io, authSocket);
 
     socket.on('users:get', () => {
       socket.emit('online_users', Array.from(onlineUsers.values()));

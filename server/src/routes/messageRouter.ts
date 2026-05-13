@@ -22,3 +22,9 @@ messageRouter.get(
   authMiddleware,
   catchError(messagesController.getPrivateMessages),
 );
+
+messageRouter.post(
+  '/:messageId/react',
+  authMiddleware,
+  catchError(messagesController.reactToMessage),
+);
