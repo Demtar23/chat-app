@@ -1,12 +1,14 @@
 import { useRef, useState } from 'react';
 import { getSocket } from '../../../services/socket';
+import type { ActiveChat } from '../../../types/chat';
 
 type Props = {
   onSend: (text: string) => void;
   isDark: boolean;
+  activeChat: ActiveChat;
 };
 
-export function MessageInput({ onSend, isDark }: Props) {
+export function MessageInput({ onSend, isDark, activeChat }: Props) {
   const [text, setText] = useState('');
 
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -20,14 +22,23 @@ export function MessageInput({ onSend, isDark }: Props) {
       return;
     }
 
-    socket.emit('typing:start');
+    socket.emit('typing:start', {
+      type: activeChat.type,
+      roomId: activeChat.type === 'room' ? activeChat.roomId : undefined,
+      receiverId: activeChat.type === 'private' ? activeChat.userId : undefined,
+    });
 
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
 
     typingTimeoutRef.current = setTimeout(() => {
-      socket.emit('typing:stop');
+      socket.emit('typing:stop', {
+        type: activeChat.type,
+        roomId: activeChat.type === 'room' ? activeChat.roomId : undefined,
+        receiverId:
+          activeChat.type === 'private' ? activeChat.userId : undefined,
+      });
     }, 5000); //для тестів 5 секунд, потім залишу 1-2 секунди
   }
 
@@ -35,9 +46,13 @@ export function MessageInput({ onSend, isDark }: Props) {
     if (!text.trim()) return;
 
     const socket = getSocket();
-
     if (socket) {
-      socket.emit('typing:stop');
+      socket.emit('typing:stop', {
+        type: activeChat.type,
+        roomId: activeChat.type === 'room' ? activeChat.roomId : undefined,
+        receiverId:
+          activeChat.type === 'private' ? activeChat.userId : undefined,
+      });
     }
 
     if (typingTimeoutRef.current) {

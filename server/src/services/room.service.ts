@@ -24,7 +24,7 @@ async function joinRoom(roomId: string, userId: string) {
   return Room.findByIdAndUpdate(
     roomId,
     { $addToSet: { members: userId } },
-    { new: true },
+    { returnDocument: 'after' },
   );
 }
 
@@ -32,7 +32,7 @@ async function leaveRoom(roomId: string, userId: string) {
   return Room.findByIdAndUpdate(
     roomId,
     { $pull: { members: userId } },
-    { new: true },
+    { returnDocument: 'after' },
   );
 }
 

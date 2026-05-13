@@ -29,6 +29,10 @@ export function roomHandler(io: Server, socket: SocketWithUser) {
     socket.emit('room:joined', room);
   });
 
+  socket.on('room:created', (room) => {
+    socket.broadcast.emit('room:created', room);
+  });
+
   socket.on('room:leave', async (roomId: string) => {
     await socket.leave(roomId);
 
