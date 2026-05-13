@@ -24,4 +24,4 @@ authRouter.post(
 
 authRouter.post('/refresh', catchError(authController.refresh));
 
-authRouter.post('/logout', authMiddleware, catchError(authController.logout));
+authRouter.post('/logout', catchError(authController.logout));

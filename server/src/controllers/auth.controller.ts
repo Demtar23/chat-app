@@ -26,7 +26,7 @@ async function register(req: Request, res: Response) {
   res.cookie('refreshToken', refreshToken, {
     maxAge: 7 * 24 * 60 * 60 * 1000,
     httpOnly: true,
-    sameSite: 'none',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     secure: process.env.NODE_ENV === 'production',
   });
 
@@ -73,7 +73,7 @@ async function login(req: Request, res: Response) {
   res.cookie('refreshToken', refreshToken, {
     maxAge: 7 * 24 * 60 * 60 * 1000,
     httpOnly: true,
-    sameSite: 'none',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     secure: process.env.NODE_ENV === 'production',
   });
 
@@ -100,7 +100,7 @@ async function refresh(req: Request, res: Response) {
   if (!userData) {
     res.clearCookie('refreshToken', {
       httpOnly: true,
-      sameSite: 'none',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       secure: process.env.NODE_ENV === 'production',
     });
 
@@ -114,7 +114,7 @@ async function refresh(req: Request, res: Response) {
   if (!user) {
     res.clearCookie('refreshToken', {
       httpOnly: true,
-      sameSite: 'none',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       secure: process.env.NODE_ENV === 'production',
     });
 
@@ -142,7 +142,7 @@ async function refresh(req: Request, res: Response) {
 async function logout(req: Request, res: Response) {
   res.clearCookie('refreshToken', {
     httpOnly: true,
-    sameSite: 'none',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     secure: process.env.NODE_ENV === 'production',
   });
 
