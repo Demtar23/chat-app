@@ -1,13 +1,6 @@
-const API_URL = 'http://localhost:5000/api';
+import type { Room } from "../types/room";
 
-export type Room = {
-  _id: string;
-  name: string;
-  description: string;
-  createdBy: string;
-  members: string[];
-  createdAt: string;
-};
+const API_URL = 'http://localhost:5000/api';
 
 export async function fetchRooms(token: string): Promise<Room[]> {
   const res = await fetch(`${API_URL}/rooms`, {

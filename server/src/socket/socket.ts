@@ -6,11 +6,13 @@ import { messageHandler } from './handlers/message.handler';
 import { typingHandler } from './handlers/typing.handler';
 import { roomHandler } from './handlers/room.handler';
 import { reactionHandler } from './handlers/reaction.handler';
+import { messagesService } from '../services/message.service';
+import { statusHandler } from './handlers/status.handler';
 
 export function initSocket(io: Server) {
   io.use(socketAuth);
 
-  io.on('connection', (socket) => {
+  io.on('connection', async (socket) => {
     const authSocket = socket as SocketWithUser;
 
     const user = authSocket.user;
@@ -18,6 +20,8 @@ export function initSocket(io: Server) {
     if (!user) {
       return;
     }
+
+    await messagesService.markAsDelivered(user.id);
 
     onlineUsers.set(user.id, {
       userId: user.id,
@@ -33,6 +37,7 @@ export function initSocket(io: Server) {
     typingHandler(io, authSocket);
     roomHandler(io, authSocket);
     reactionHandler(io, authSocket);
+    statusHandler(io, authSocket);
 
     socket.on('users:get', () => {
       socket.emit('online_users', Array.from(onlineUsers.values()));

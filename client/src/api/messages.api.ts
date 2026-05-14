@@ -1,19 +1,7 @@
+import type { Message } from "../types/message";
+
 const API_URL = 'http://localhost:5000/api';
 
-export type Message = {
-  _id: string;
-  text: string;
-  senderId: string;
-  senderUsername: string;
-  type: 'global' | 'room' | 'private';
-  roomId?: string;
-  receiverId?: string;
-  createdAt: string;
-  reactions: {
-    emoji: string;
-    users: string[];
-  }[];
-};
 
 export async function fetchGlobalMessages(
   token: string,

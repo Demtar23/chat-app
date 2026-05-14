@@ -1,7 +1,5 @@
-type Reaction = {
-  emoji: string;
-  users: string[];
-};
+import type { Reaction } from "../../../types/message";
+
 
 type Props = {
   reactions: Reaction[];

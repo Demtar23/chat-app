@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getSocket } from '../services/socket';
-import { fetchRooms, joinRoom, type Room } from '../api/rooms.api';
 import {
   fetchGlobalMessages,
   fetchRoomMessages,
   fetchPrivateMessages,
-  type Message,
 } from '../api/messages.api';
 import { TopBar } from '../components/Chat/components/TopBar';
 import { Sidebar } from '../components/Chat/components/Sidebar';
@@ -14,17 +12,13 @@ import { MessageList } from '../components/Chat/components/MessageList';
 import { TypingIndicator } from '../components/Chat/components/TypingIndicator';
 import { MessageInput } from '../components/Chat/components/MessageInput';
 import { CreateRoomModal } from '../components/Chat/components/CreateRoomModal';
-
-type OnlineUser = {
-  userId: string;
-  userName: string;
-  socketId: string;
-};
-
-type ActiveChat =
-  | { type: 'global' }
-  | { type: 'room'; roomId: string; roomName: string }
-  | { type: 'private'; userId: string; username: string };
+import type { Message } from '../types/message';
+import type { OnlineUser } from '../types/socket';
+import type { Room } from '../types/room';
+import type { ActiveChat } from '../types/chat';
+import { fetchRooms, joinRoom } from '../api/rooms.api';
+import type { UserProfile } from '../types/user';
+import { fetchAllUsers } from '../api/users.api';
 
 export function ChatPage() {
   const { accessToken, user } = useAuth();
@@ -35,16 +29,26 @@ export function ChatPage() {
   const [isDark, setIsDark] = useState(true);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const [showCreateRoom, setShowCreateRoom] = useState(false);
+  const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
 
   // завантажуємо кімнати
   useEffect(() => {
-    if (!accessToken) return;
+    if (!accessToken) {
+      return;
+    }
     fetchRooms(accessToken).then(setRooms);
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (!accessToken) return;
+    fetchAllUsers(accessToken).then(setAllUsers);
   }, [accessToken]);
 
   // завантажуємо повідомлення при зміні активного чату
   useEffect(() => {
-    if (!accessToken) return;
+    if (!accessToken) {
+      return;
+    }
 
     const token = accessToken;
 
@@ -66,6 +70,9 @@ export function ChatPage() {
         const data = await fetchPrivateMessages(token, activeChat.userId);
 
         setMessages(data);
+
+        const socket = getSocket();
+        socket?.emit('messages:seen', activeChat.userId);
       }
     }
 
@@ -83,7 +90,12 @@ export function ChatPage() {
       return;
     }
 
+    const token = accessToken; // фіксуємо токен
+
     socket.on('online_users', setOnlineUsers);
+    socket.on('room:created', (room: Room) => {
+      setRooms((prev) => [...prev, room]);
+    });
 
     socket.on('receive_message', (message: Message) => {
       if (activeChat.type === 'global') {
@@ -102,8 +114,14 @@ export function ChatPage() {
         const isCurrentChat =
           message.senderId === activeChat.userId ||
           message.receiverId === activeChat.userId;
+
         if (isCurrentChat) {
           setMessages((prev) => [...prev, message]);
+
+          // якщо отримувач вже в цьому чаті — одразу позначаємо як seen
+          if (message.senderId === activeChat.userId) {
+            socket.emit('messages:seen', activeChat.userId);
+          }
         }
       }
     });
@@ -120,7 +138,9 @@ export function ChatPage() {
             type === 'private' &&
             receiverId === user?.id);
 
-        if (!isRelevant) return;
+        if (!isRelevant) {
+          return;
+        }
 
         setTypingUsers((prev) =>
           isTyping
@@ -132,36 +152,45 @@ export function ChatPage() {
       },
     );
 
-    socket.on('room:created', (room: Room) => {
-      setRooms((prev) => [...prev, room]);
-    });
-
     socket.on('reaction:updated', (updatedMessage: Message) => {
       setMessages((prev) =>
         prev.map((m) => (m._id === updatedMessage._id ? updatedMessage : m)),
       );
     });
 
-    if (socket.connected) {
-      socket.emit('users:get');
-    } else {
-      socket.once('connect', () => socket.emit('users:get'));
-    }
+    socket.on('messages:seen', async (data: { by: string; from: string }) => {
+      if (activeChat.type === 'private' && activeChat.userId === data.by) {
+        const fresh = await fetchPrivateMessages(token, data.by);
+        setMessages(fresh);
+      } else {
+        // відправник не в приватному чаті — просто оновлюємо статус в стейті
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.senderId === user?.id && m.receiverId === data.by
+              ? { ...m, status: 'seen' as const }
+              : m,
+          ),
+        );
+      }
+    });
 
     return () => {
       socket.off('online_users');
+      socket.off('room:created');
       socket.off('receive_message');
       socket.off('room:message:receive');
       socket.off('private:receive');
       socket.off('typing:update');
-      socket.off('room:created');
       socket.off('reaction:updated');
+      socket.off('messages:seen');
     };
-  }, [accessToken, activeChat]);
+  }, [accessToken, activeChat, user?.id]);
 
   // приєднатись до кімнати через socket при виборі
   async function handleSelectRoom(roomId: string, roomName: string) {
-    if (!accessToken) return;
+    if (!accessToken) {
+      return;
+    }
 
     const socket = getSocket();
 
@@ -223,6 +252,7 @@ export function ChatPage() {
         <Sidebar
           isDark={isDark}
           onlineUsers={onlineUsers}
+          allUsers={allUsers} 
           rooms={rooms}
           activeChat={activeChat}
           currentUserId={user.id}

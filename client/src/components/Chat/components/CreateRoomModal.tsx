@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { createRoom, type Room } from '../../../api/rooms.api';
 import { getSocket } from '../../../services/socket';
+import type { Room } from '../../../types/room';
+import { createRoom } from '../../../api/rooms.api';
 
 type Props = {
   isDark: boolean;

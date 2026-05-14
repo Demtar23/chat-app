@@ -1,19 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { MessageItem } from './MessageItem';
+import type { Message } from '../../../types/message';
 
-type Reaction = {
-  emoji: string;
-  users: string[];
-};
-
-type Message = {
-  _id: string;
-  text: string;
-  senderId: string;
-  senderUsername: string;
-  createdAt: string;
-  reactions: Reaction[];
-};
 
 type Props = {
   messages: Message[];
@@ -22,7 +10,12 @@ type Props = {
   onReact: (messageId: string, emoji: string) => void;
 };
 
-export function MessageList({ messages, isDark, currentUserId, onReact }: Props) {
+export function MessageList({
+  messages,
+  isDark,
+  currentUserId,
+  onReact,
+}: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

@@ -9,6 +9,7 @@ type CreateMessageData = {
   type: 'global' | 'room' | 'private';
   roomId?: string;
   receiverId?: string;
+  status?: 'sent' | 'delivered' | 'seen';
 };
 
 async function createMessage(data: CreateMessageData) {
@@ -87,6 +88,40 @@ async function toggleReaction(
   return message.save();
 }
 
+async function updateMessageStatus(
+  messageId: string,
+  status: 'sent' | 'delivered' | 'seen',
+) {
+  return Message.findByIdAndUpdate(
+    messageId,
+    { status },
+    { returnDocument: 'after' },
+  );
+}
+
+async function markMessagesAsSeen(senderId: string, receiverId: string) {
+  return Message.updateMany(
+    {
+      type: 'private',
+      senderId,
+      receiverId,
+      status: { $in: ['sent', 'delivered'] },
+    },
+    { status: 'seen' },
+  );
+}
+
+async function markAsDelivered(receiverId: string) {
+  return Message.updateMany(
+    {
+      type: 'private',
+      receiverId,
+      status: 'sent',
+    },
+    { status: 'delivered' },
+  );
+}
+
 export const messagesService = {
   createMessage,
   getAllMessages,
@@ -94,4 +129,7 @@ export const messagesService = {
   getRoomMessages,
   getPrivateMessages,
   toggleReaction,
+  updateMessageStatus,
+  markMessagesAsSeen,
+  markAsDelivered,
 };

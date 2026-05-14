@@ -52,12 +52,15 @@ export function messageHandler(io: Server, socket: SocketWithUser) {
         return;
       }
 
+      const isReceiverOnline = onlineUsers.has(data.receiverId);
+
       const message = await messagesService.createMessage({
         text,
         senderId: socket.user.id,
         senderUsername: socket.user.username,
         type: 'private',
         receiverId: data.receiverId,
+        status: isReceiverOnline ? 'delivered' : 'sent',
       });
 
       socket.emit('private:receive', message);

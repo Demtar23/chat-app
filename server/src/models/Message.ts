@@ -54,6 +54,12 @@ const messageSchema = new Schema(
       type: [reactionSchema],
       default: [],
     },
+
+    status: {
+      type: String,
+      enum: ['sent', 'delivered', 'seen'],
+      default: 'sent',
+    },
   },
 
   {

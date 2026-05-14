@@ -1,20 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { ReactionBar } from './ReactionBar';
 import { ReactionPicker } from './ReactionPicker';
-
-type Reaction = {
-  emoji: string;
-  users: string[];
-};
-
-type Message = {
-  _id: string;
-  text: string;
-  senderId: string;
-  senderUsername: string;
-  createdAt: string;
-  reactions: Reaction[];
-};
+import { MessageStatus } from './MessageStatus';
+import type { Message } from '../../../types/message';
 
 const COLORS = [
   'text-[#5DCAA5]',
@@ -62,14 +50,18 @@ export function MessageItem({
   const nameColor = COLORS[index];
   const avatarColor = AVATAR_COLORS[index];
 
+  // чи це повідомлення від поточного юзера
+  const isOwnMessage = message.senderId === currentUserId;
+  // показуємо статус тільки для власних приватних повідомлень
+  const showStatus = isOwnMessage && message.type === 'private';
+
   useEffect(() => {
-    if (!showPicker) return;
+    if (!showPicker) {
+      return;
+    }
 
     function handleClickOutside(e: MouseEvent) {
-      if (
-        pickerRef.current &&
-        !pickerRef.current.contains(e.target as Node)
-      ) {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
         setShowPicker(false);
       }
     }
@@ -79,7 +71,7 @@ export function MessageItem({
   }, [showPicker]);
 
   return (
-    <div className="flex gap-3 group relative"> {/* ← прибрав onMouseLeave */}
+    <div className="flex gap-3 group relative">
       <div
         className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0 mt-0.5 ${avatarColor.bg} ${avatarColor.text}`}
       >
@@ -96,6 +88,11 @@ export function MessageItem({
           >
             {formatTime(message.createdAt)}
           </span>
+
+          {/* статус поряд з часом */}
+          {showStatus && (
+            <MessageStatus status={message.status} isDark={isDark} />
+          )}
 
           <button
             onClick={() => setShowPicker((prev) => !prev)}
