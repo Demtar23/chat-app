@@ -36,6 +36,9 @@ type Props = {
   isDark: boolean;
   currentUserId: string;
   onReact: (messageId: string, emoji: string) => void;
+  onEdit: (messageId: string, text: string) => void;
+  onDeleteForAll: (messageId: string) => void;
+  onDeleteForMe: (messageId: string) => void;
 };
 
 export function MessageItem({
@@ -43,32 +46,64 @@ export function MessageItem({
   isDark,
   currentUserId,
   onReact,
+  onEdit,
+  onDeleteForAll,
+  onDeleteForMe,
 }: Props) {
   const [showPicker, setShowPicker] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState(message.text);
+
   const pickerRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
   const index = getColorIndex(message.senderUsername);
   const nameColor = COLORS[index];
   const avatarColor = AVATAR_COLORS[index];
 
-  // чи це повідомлення від поточного юзера
   const isOwnMessage = message.senderId === currentUserId;
-  // показуємо статус тільки для власних приватних повідомлень
   const showStatus = isOwnMessage && message.type === 'private';
 
-  useEffect(() => {
-    if (!showPicker) {
-      return;
-    }
+  const isDeleted = message.isDeleted;
+  const isDeletedForMe = message.deletedFor?.includes(currentUserId);
 
+  useEffect(() => {
+    if (!showPicker) return;
     function handleClickOutside(e: MouseEvent) {
       if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
         setShowPicker(false);
       }
     }
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showPicker]);
+
+  useEffect(() => {
+    if (!showMenu) {
+      return;
+    }
+    function handleClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showMenu]);
+
+  if (isDeletedForMe) {
+    return null;
+  }
+
+  function handleEditSubmit() {
+    if (!editText.trim() || editText === message.text) {
+      setIsEditing(false);
+      return;
+    }
+    onEdit(message._id, editText.trim());
+    setIsEditing(false);
+  }
 
   return (
     <div className="flex gap-3 group relative">
@@ -89,32 +124,124 @@ export function MessageItem({
             {formatTime(message.createdAt)}
           </span>
 
-          {/* статус поряд з часом */}
+          {message.isEdited && !isDeleted && (
+            <span
+              className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}
+            >
+              (edited)
+            </span>
+          )}
+
           {showStatus && (
             <MessageStatus status={message.status} isDark={isDark} />
           )}
 
-          <button
-            onClick={() => setShowPicker((prev) => !prev)}
-            className="opacity-0 group-hover:opacity-100 transition-opacity text-sm ml-1"
-            title="Додати реакцію"
-          >
-            😊
-          </button>
+          {/* кнопки при hover */}
+          {!isDeleted && (
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 ml-1">
+              <button
+                onClick={() => setShowPicker((prev) => !prev)}
+                className="text-sm"
+                title="Додати реакцію"
+              >
+                😊
+              </button>
+
+              {/* меню — три крапки */}
+              <div className="relative" ref={menuRef}>
+                <button
+                  onClick={() => setShowMenu((prev) => !prev)}
+                  className={`text-xs px-1 ${isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
+                  title="Більше"
+                >
+                  ···
+                </button>
+
+                {showMenu && (
+                  <div
+                    className={`absolute top-5 left-0 z-20 rounded-lg shadow-xl border min-w-[140px] py-1 ${isDark ? 'bg-[#2b2d31] border-[#1e1f22]' : 'bg-white border-gray-200'}`}
+                  >
+                    {isOwnMessage && (
+                      <button
+                        onClick={() => {
+                          setIsEditing(true);
+                          setEditText(message.text);
+                          setShowMenu(false);
+                        }}
+                        className={`w-full text-left px-3 py-1.5 text-sm ${isDark ? 'text-gray-300 hover:bg-[#35373c]' : 'text-gray-700 hover:bg-gray-100'}`}
+                      >
+                        ✏️ Редагувати
+                      </button>
+                    )}
+                    {isOwnMessage && (
+                      <button
+                        onClick={() => {
+                          onDeleteForAll(message._id);
+                          setShowMenu(false);
+                        }}
+                        className="w-full text-left px-3 py-1.5 text-sm text-red-400 hover:bg-red-500/10"
+                      >
+                        🗑️ Видалити для всіх
+                      </button>
+                    )}
+                    <button
+                      onClick={() => {
+                        onDeleteForMe(message._id);
+                        setShowMenu(false);
+                      }}
+                      className={`w-full text-left px-3 py-1.5 text-sm ${isDark ? 'text-gray-300 hover:bg-[#35373c]' : 'text-gray-700 hover:bg-gray-100'}`}
+                    >
+                      🙈 Видалити для мене
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
-        <p
-          className={`text-[13px] leading-relaxed ${isDark ? 'text-[#dbdee1]' : 'text-gray-700'}`}
-        >
-          {message.text}
-        </p>
+        {/* текст або режим редагування */}
+        {isEditing ? (
+          <div className="flex gap-2 mt-1">
+            <input
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleEditSubmit();
+                if (e.key === 'Escape') setIsEditing(false);
+              }}
+              autoFocus
+              className={`flex-1 text-sm px-2 py-1 rounded outline-none border focus:border-[#5865f2] ${isDark ? 'bg-[#383a40] text-white border-gray-600' : 'bg-gray-100 text-gray-900 border-gray-300'}`}
+            />
+            <button
+              onClick={handleEditSubmit}
+              className="text-xs px-2 py-1 bg-[#5865f2] text-white rounded"
+            >
+              Зберегти
+            </button>
+            <button
+              onClick={() => setIsEditing(false)}
+              className={`text-xs px-2 py-1 rounded ${isDark ? 'text-gray-400 hover:bg-[#35373c]' : 'text-gray-500 hover:bg-gray-100'}`}
+            >
+              Скасувати
+            </button>
+          </div>
+        ) : (
+          <p
+            className={`text-[13px] leading-relaxed ${isDeleted ? 'italic' : ''} ${isDark ? (isDeleted ? 'text-gray-600' : 'text-[#dbdee1]') : isDeleted ? 'text-gray-400' : 'text-gray-700'}`}
+          >
+            {message.text}
+          </p>
+        )}
 
-        <ReactionBar
-          reactions={message.reactions}
-          currentUserId={currentUserId}
-          isDark={isDark}
-          onReact={(emoji) => onReact(message._id, emoji)}
-        />
+        {!isDeleted && (
+          <ReactionBar
+            reactions={message.reactions}
+            currentUserId={currentUserId}
+            isDark={isDark}
+            onReact={(emoji) => onReact(message._id, emoji)}
+          />
+        )}
 
         {showPicker && (
           <div ref={pickerRef} className="relative">

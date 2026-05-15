@@ -17,4 +17,7 @@ export type Message = {
   createdAt: string;
   reactions: Reaction[];
   status: MessageStatus;
+  isEdited: boolean;
+  isDeleted: boolean;
+  deletedFor: string[];
 };

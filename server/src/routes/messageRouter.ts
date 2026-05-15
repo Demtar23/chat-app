@@ -28,3 +28,21 @@ messageRouter.post(
   authMiddleware,
   catchError(messagesController.reactToMessage),
 );
+
+messageRouter.patch(
+  '/:messageId',
+  authMiddleware,
+  catchError(messagesController.editMessage),
+);
+
+messageRouter.delete(
+  '/:messageId',
+  authMiddleware,
+  catchError(messagesController.deleteMessageForAll),
+);
+
+messageRouter.delete(
+  '/:messageId/me',
+  authMiddleware,
+  catchError(messagesController.deleteMessageForMe),
+);

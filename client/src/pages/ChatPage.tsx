@@ -174,6 +174,22 @@ export function ChatPage() {
       }
     });
 
+    socket.on('message:edited', (updatedMessage: Message) => {
+      setMessages((prev) =>
+        prev.map((m) => (m._id === updatedMessage._id ? updatedMessage : m)),
+      );
+    });
+
+    socket.on('message:deleted', (updatedMessage: Message) => {
+      setMessages((prev) =>
+        prev.map((m) => (m._id === updatedMessage._id ? updatedMessage : m)),
+      );
+    });
+
+    socket.on('message:deleted:me', ({ messageId }: { messageId: string }) => {
+      setMessages((prev) => prev.filter((m) => m._id !== messageId));
+    });
+
     return () => {
       socket.off('online_users');
       socket.off('room:created');
@@ -183,6 +199,9 @@ export function ChatPage() {
       socket.off('typing:update');
       socket.off('reaction:updated');
       socket.off('messages:seen');
+      socket.off('message:edited');
+      socket.off('message:deleted');
+      socket.off('message:deleted:me');
     };
   }, [accessToken, activeChat, user?.id]);
 
@@ -224,6 +243,22 @@ export function ChatPage() {
     return `@ ${activeChat.username}`;
   }
 
+  function handleEdit(messageId: string, text: string) {
+    const socket = getSocket();
+    socket?.emit('message:edit', { messageId, text });
+  }
+
+  function handleDeleteForAll(messageId: string) {
+    const socket = getSocket();
+    socket?.emit('message:delete', { messageId });
+  }
+
+  function handleDeleteForMe(messageId: string) {
+    const socket = getSocket();
+    socket?.emit('message:delete:me', { messageId });
+    setMessages((prev) => prev.filter((m) => m._id !== messageId));
+  }
+
   async function handleReact(messageId: string, emoji: string) {
     if (!accessToken) {
       return;
@@ -252,7 +287,7 @@ export function ChatPage() {
         <Sidebar
           isDark={isDark}
           onlineUsers={onlineUsers}
-          allUsers={allUsers} 
+          allUsers={allUsers}
           rooms={rooms}
           activeChat={activeChat}
           currentUserId={user.id}
@@ -269,6 +304,9 @@ export function ChatPage() {
             isDark={isDark}
             currentUserId={user.id}
             onReact={handleReact}
+            onEdit={handleEdit}
+            onDeleteForAll={handleDeleteForAll}
+            onDeleteForMe={handleDeleteForMe}
           />
           <TypingIndicator typingUsers={typingUsers} isDark={isDark} />
           <MessageInput

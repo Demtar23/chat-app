@@ -60,6 +60,21 @@ const messageSchema = new Schema(
       enum: ['sent', 'delivered', 'seen'],
       default: 'sent',
     },
+
+    isEdited: {
+      type: Boolean,
+      default: false,
+    },
+
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+
+    deletedFor: {
+      type: [String],
+      default: [],
+    },
   },
 
   {

@@ -122,6 +122,49 @@ async function markAsDelivered(receiverId: string) {
   );
 }
 
+async function editMessage(messageId: string, text: string, userId: string) {
+  const message = await Message.findById(messageId);
+
+  if (!message) {
+    return null;
+  }
+
+  // тільки власник може редагувати
+  if (message.senderId !== userId) {
+    return null;
+  }
+
+  message.text = text;
+  message.isEdited = true;
+
+  return message.save();
+}
+
+async function deleteMessageForAll(messageId: string, userId: string) {
+  const message = await Message.findById(messageId);
+
+  if (!message) {
+    return null;
+  }
+
+  if (message.senderId !== userId) {
+    return null;
+  }
+
+  message.isDeleted = true;
+  message.text = 'Повідомлення видалено';
+
+  return message.save();
+}
+
+async function deleteMessageForMe(messageId: string, userId: string) {
+  return Message.findByIdAndUpdate(
+    messageId,
+    { $addToSet: { deletedFor: userId } },
+    { returnDocument: 'after' },
+  );
+}
+
 export const messagesService = {
   createMessage,
   getAllMessages,
@@ -132,4 +175,7 @@ export const messagesService = {
   updateMessageStatus,
   markMessagesAsSeen,
   markAsDelivered,
+  editMessage,
+  deleteMessageForAll,
+  deleteMessageForMe,
 };

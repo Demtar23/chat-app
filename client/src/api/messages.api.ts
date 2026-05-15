@@ -1,7 +1,6 @@
-import type { Message } from "../types/message";
+import type { Message } from '../types/message';
 
 const API_URL = 'http://localhost:5000/api';
-
 
 export async function fetchGlobalMessages(
   token: string,
@@ -71,5 +70,49 @@ export async function toggleReaction(
     throw new Error('Failed to toggle reaction');
   }
 
+  return res.json();
+}
+
+export async function editMessage(
+  token: string,
+  messageId: string,
+  text: string,
+): Promise<Message> {
+  const res = await fetch(`${API_URL}/messages/${messageId}`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ text }),
+  });
+
+  if (!res.ok) throw new Error('Failed to edit message');
+  return res.json();
+}
+
+export async function deleteMessageForAll(
+  token: string,
+  messageId: string,
+): Promise<Message> {
+  const res = await fetch(`${API_URL}/messages/${messageId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error('Failed to delete message');
+  return res.json();
+}
+
+export async function deleteMessageForMe(
+  token: string,
+  messageId: string,
+): Promise<Message> {
+  const res = await fetch(`${API_URL}/messages/${messageId}/me`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error('Failed to delete message');
   return res.json();
 }
