@@ -6,6 +6,12 @@ export type Reaction = {
 export type MessageType = 'global' | 'room' | 'private';
 export type MessageStatus = 'sent' | 'delivered' | 'seen';
 
+export type ReplyTo = {
+  messageId: string;
+  text: string;
+  senderUsername: string;
+};
+
 export type Message = {
   _id: string;
   text: string;
@@ -20,4 +26,7 @@ export type Message = {
   isEdited: boolean;
   isDeleted: boolean;
   deletedFor: string[];
+  replyTo?: ReplyTo | null;
+  isPinned: boolean;
+  pinnedAt?: string | null;
 };

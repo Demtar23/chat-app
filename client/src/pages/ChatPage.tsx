@@ -5,6 +5,7 @@ import {
   fetchGlobalMessages,
   fetchRoomMessages,
   fetchPrivateMessages,
+  fetchPinnedMessages,
 } from '../api/messages.api';
 import { TopBar } from '../components/Chat/components/TopBar';
 import { Sidebar } from '../components/Chat/components/Sidebar';
@@ -12,13 +13,15 @@ import { MessageList } from '../components/Chat/components/MessageList';
 import { TypingIndicator } from '../components/Chat/components/TypingIndicator';
 import { MessageInput } from '../components/Chat/components/MessageInput';
 import { CreateRoomModal } from '../components/Chat/components/CreateRoomModal';
-import type { Message } from '../types/message';
+import type { Message, ReplyTo } from '../types/message';
 import type { OnlineUser } from '../types/socket';
 import type { Room } from '../types/room';
 import type { ActiveChat } from '../types/chat';
 import { fetchRooms, joinRoom } from '../api/rooms.api';
 import type { UserProfile } from '../types/user';
 import { fetchAllUsers } from '../api/users.api';
+import { ReplyPreview } from '../components/Chat/components/ReplyPreview';
+import { PinnedMessageBar } from '../components/Chat/components/PinnedMessageBar';
 
 export function ChatPage() {
   const { accessToken, user } = useAuth();
@@ -30,6 +33,43 @@ export function ChatPage() {
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const [showCreateRoom, setShowCreateRoom] = useState(false);
   const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
+  const [replyTo, setReplyTo] = useState<ReplyTo | null>(null);
+  const [pinnedMessages, setPinnedMessages] = useState<Message[]>([]);
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
+
+  const [activePinnedIndex, setActivePinnedIndex] = useState(0);
+
+  // const activePinnedIndex = (() => {
+  //   if (pinnedMessages.length === 0) return -1;
+
+  //   // знаходимо останній pin що вже пройшли (не видимий або видимий)
+  //   // "пройшли" = повідомлення вище або в viewport
+  //   // якщо жоден не видимий і всі вище — показуємо перший
+  //   // якщо всі видимі — показуємо останній видимий
+
+  //   // простіше: показуємо останній pin що не є "нижче viewport"
+  //   let result = 0; // дефолт — перший pin
+
+  //   pinnedMessages.forEach((m, i) => {
+  //     const el = document.getElementById(`message-${m._id}`);
+  //     if (!el) return;
+
+  //     const container = document.querySelector('.messages-container');
+  //     if (!container) return;
+
+  //     const containerRect = container.getBoundingClientRect();
+  //     const rect = el.getBoundingClientRect();
+
+  //     // якщо верх повідомлення вище низу контейнера — ми його "пройшли"
+  //     if (rect.top < containerRect.bottom) {
+  //       result = i;
+  //     }
+  //   });
+
+  //   return result;
+  // })();
+
+  const showPinnedBar = pinnedMessages.length > 0;
 
   // завантажуємо кімнати
   useEffect(() => {
@@ -54,23 +94,36 @@ export function ChatPage() {
 
     async function loadMessages() {
       setTypingUsers([]);
+      setReplyTo(null);
 
       if (activeChat.type === 'global') {
         const data = await fetchGlobalMessages(token);
         setMessages(data);
+        const pinned = await fetchPinnedMessages(token, 'global');
+        setPinnedMessages(pinned);
       }
 
       if (activeChat.type === 'room') {
         const data = await fetchRoomMessages(token, activeChat.roomId);
-
         setMessages(data);
+        const pinned = await fetchPinnedMessages(
+          token,
+          'room',
+          activeChat.roomId,
+        );
+        setPinnedMessages(pinned);
       }
 
       if (activeChat.type === 'private') {
         const data = await fetchPrivateMessages(token, activeChat.userId);
-
         setMessages(data);
-
+        const pinned = await fetchPinnedMessages(
+          token,
+          'private',
+          undefined,
+          activeChat.userId,
+        );
+        setPinnedMessages(pinned);
         const socket = getSocket();
         socket?.emit('messages:seen', activeChat.userId);
       }
@@ -178,16 +231,65 @@ export function ChatPage() {
       setMessages((prev) =>
         prev.map((m) => (m._id === updatedMessage._id ? updatedMessage : m)),
       );
+      setPinnedMessages((prev) =>
+        prev.map((m) => (m._id === updatedMessage._id ? updatedMessage : m)),
+      );
     });
 
     socket.on('message:deleted', (updatedMessage: Message) => {
       setMessages((prev) =>
         prev.map((m) => (m._id === updatedMessage._id ? updatedMessage : m)),
       );
+      setPinnedMessages((prev) =>
+        prev.filter((m) => m._id !== updatedMessage._id),
+      );
     });
 
     socket.on('message:deleted:me', ({ messageId }: { messageId: string }) => {
       setMessages((prev) => prev.filter((m) => m._id !== messageId));
+    });
+    socket.on('message:pinned', (updatedMessage: Message) => {
+      setMessages((prev) =>
+        prev.map((m) => (m._id === updatedMessage._id ? updatedMessage : m)),
+      );
+
+      // додаємо в pinnedMessages тільки якщо відповідає активному чату
+      const belongsToActiveChat =
+        (activeChat.type === 'global' && updatedMessage.type === 'global') ||
+        (activeChat.type === 'room' &&
+          updatedMessage.type === 'room' &&
+          updatedMessage.roomId === activeChat.roomId) ||
+        (activeChat.type === 'private' &&
+          updatedMessage.type === 'private' &&
+          (updatedMessage.senderId === activeChat.userId ||
+            updatedMessage.receiverId === activeChat.userId));
+
+      if (!belongsToActiveChat) return;
+
+      setPinnedMessages((prev) => {
+        const exists = prev.find((m) => m._id === updatedMessage._id);
+        if (exists) return prev;
+        return [...prev, updatedMessage].sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+        );
+      });
+    });
+
+    socket.on('message:unpinned', (updatedMessage: Message) => {
+      setMessages((prev) =>
+        prev.map((m) => (m._id === updatedMessage._id ? updatedMessage : m)),
+      );
+
+      // видаляємо з pinnedMessages тільки якщо є там
+      setPinnedMessages((prev) => {
+        const newPinned = prev.filter((m) => m._id !== updatedMessage._id);
+        if (newPinned.length === prev.length) return prev; // не було в списку
+        setActivePinnedIndex((i) =>
+          Math.min(i, Math.max(0, newPinned.length - 1)),
+        );
+        return newPinned;
+      });
     });
 
     return () => {
@@ -202,8 +304,38 @@ export function ChatPage() {
       socket.off('message:edited');
       socket.off('message:deleted');
       socket.off('message:deleted:me');
+      socket.off('message:pinned');
+      socket.off('message:unpinned');
     };
   }, [accessToken, activeChat, user?.id]);
+
+  // повторно приєднатись до room після reconnect socket
+  useEffect(() => {
+    if (activeChat.type !== 'room') {
+      return;
+    }
+
+    const socket = getSocket();
+    if (!socket) {
+      return;
+    }
+
+    const { roomId } = activeChat;
+
+    function rejoinRoom() {
+      socket?.emit('room:join', roomId);
+    }
+
+    socket.on('connect', rejoinRoom);
+
+    if (socket.connected) {
+      rejoinRoom();
+    }
+
+    return () => {
+      socket.off('connect', rejoinRoom);
+    };
+  }, [activeChat]);
 
   // приєднатись до кімнати через socket при виборі
   async function handleSelectRoom(roomId: string, roomName: string) {
@@ -226,15 +358,27 @@ export function ChatPage() {
 
   function sendMessage(text: string) {
     const socket = getSocket();
-    if (!socket) return;
+    if (!socket) {
+      return;
+    }
 
     if (activeChat.type === 'global') {
-      socket.emit('send_message', { text });
+      socket.emit('send_message', { text, replyTo });
     } else if (activeChat.type === 'room') {
-      socket.emit('room:message:send', { roomId: activeChat.roomId, text });
+      socket.emit('room:message:send', {
+        roomId: activeChat.roomId,
+        text,
+        replyTo,
+      });
     } else if (activeChat.type === 'private') {
-      socket.emit('private:send', { receiverId: activeChat.userId, text });
+      socket.emit('private:send', {
+        receiverId: activeChat.userId,
+        text,
+        replyTo,
+      });
     }
+
+    setReplyTo(null);
   }
 
   function getTopBarTitle() {
@@ -257,6 +401,27 @@ export function ChatPage() {
     const socket = getSocket();
     socket?.emit('message:delete:me', { messageId });
     setMessages((prev) => prev.filter((m) => m._id !== messageId));
+  }
+  function handlePin(messageId: string, isPinned: boolean) {
+    const socket = getSocket();
+    if (isPinned) {
+      socket?.emit('message:unpin', { messageId });
+    } else {
+      socket?.emit('message:pin', { messageId });
+    }
+  }
+
+  function handleUnpinFromBar(messageId: string) {
+    const socket = getSocket();
+    socket?.emit('message:unpin', { messageId });
+  }
+
+  function scrollToMessage(messageId: string) {
+    const element = document.getElementById(`message-${messageId}`);
+    if (!element) return;
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' }); // було center
+    setHighlightedId(messageId);
+    setTimeout(() => setHighlightedId(null), 1500);
   }
 
   async function handleReact(messageId: string, emoji: string) {
@@ -299,6 +464,15 @@ export function ChatPage() {
           onCreateRoom={() => setShowCreateRoom(true)}
         />
         <div className="flex flex-col flex-1 overflow-hidden">
+          {showPinnedBar && (
+            <PinnedMessageBar
+              pinnedMessages={pinnedMessages}
+              isDark={isDark}
+              onScrollToMessage={scrollToMessage}
+              onUnpin={handleUnpinFromBar}
+              currentIndex={activePinnedIndex}
+            />
+          )}
           <MessageList
             messages={messages}
             isDark={isDark}
@@ -307,8 +481,22 @@ export function ChatPage() {
             onEdit={handleEdit}
             onDeleteForAll={handleDeleteForAll}
             onDeleteForMe={handleDeleteForMe}
+            onReply={setReplyTo}
+            onPin={handlePin}
+            highlightedId={highlightedId}
+            onScrollToMessage={scrollToMessage}
+            pinnedMessageIds={pinnedMessages.map((m) => m._id)}
+            onActivePinChange={setActivePinnedIndex}
           />
           <TypingIndicator typingUsers={typingUsers} isDark={isDark} />
+
+          {replyTo && (
+            <ReplyPreview
+              replyTo={replyTo}
+              isDark={isDark}
+              onCancel={() => setReplyTo(null)}
+            />
+          )}
           <MessageInput
             key={
               activeChat.type === 'global'

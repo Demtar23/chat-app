@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { ReactionBar } from './ReactionBar';
 import { ReactionPicker } from './ReactionPicker';
 import { MessageStatus } from './MessageStatus';
-import type { Message } from '../../../types/message';
+import type { Message, ReplyTo } from '../../../types/message';
 
 const COLORS = [
   'text-[#5DCAA5]',
@@ -39,6 +39,10 @@ type Props = {
   onEdit: (messageId: string, text: string) => void;
   onDeleteForAll: (messageId: string) => void;
   onDeleteForMe: (messageId: string) => void;
+  onReply: (replyTo: ReplyTo) => void;
+  isHighlighted: boolean;
+  onScrollToMessage: (messageId: string) => void;
+  onPin: (messageId: string, isPinned: boolean) => void;
 };
 
 export function MessageItem({
@@ -49,6 +53,10 @@ export function MessageItem({
   onEdit,
   onDeleteForAll,
   onDeleteForMe,
+  onReply,
+  isHighlighted,
+  onScrollToMessage,
+  onPin,
 }: Props) {
   const [showPicker, setShowPicker] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -106,7 +114,12 @@ export function MessageItem({
   }
 
   return (
-    <div className="flex gap-3 group relative">
+    <div
+      id={`message-${message._id}`}
+      className={`flex gap-3 group relative rounded-md px-1 transition-colors duration-500 ${
+        isHighlighted ? (isDark ? 'bg-[#5865f2]/20' : 'bg-blue-50') : ''
+      }`}
+    >
       <div
         className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0 mt-0.5 ${avatarColor.bg} ${avatarColor.text}`}
       >
@@ -123,6 +136,11 @@ export function MessageItem({
           >
             {formatTime(message.createdAt)}
           </span>
+          {message.isPinned && !isDeleted && (
+            <span className="text-[10px] text-[#5865f2]" title="Закріплено">
+              📌
+            </span>
+          )}
 
           {message.isEdited && !isDeleted && (
             <span
@@ -147,6 +165,20 @@ export function MessageItem({
                 😊
               </button>
 
+              <button
+                onClick={() =>
+                  onReply({
+                    messageId: message._id,
+                    text: message.text,
+                    senderUsername: message.senderUsername,
+                  })
+                }
+                className={`text-xs px-1 ${isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
+                title="Відповісти"
+              >
+                ↩
+              </button>
+
               {/* меню — три крапки */}
               <div className="relative" ref={menuRef}>
                 <button
@@ -156,7 +188,6 @@ export function MessageItem({
                 >
                   ···
                 </button>
-
                 {showMenu && (
                   <div
                     className={`absolute top-5 left-0 z-20 rounded-lg shadow-xl border min-w-[140px] py-1 ${isDark ? 'bg-[#2b2d31] border-[#1e1f22]' : 'bg-white border-gray-200'}`}
@@ -193,12 +224,41 @@ export function MessageItem({
                     >
                       🙈 Видалити для мене
                     </button>
+
+                    {/* ← pin кнопка тут, всередині меню */}
+                    <button
+                      onClick={() => {
+                        onPin(message._id, message.isPinned);
+                        setShowMenu(false);
+                      }}
+                      className={`w-full text-left px-3 py-1.5 text-sm ${isDark ? 'text-gray-300 hover:bg-[#35373c]' : 'text-gray-700 hover:bg-gray-100'}`}
+                    >
+                      {message.isPinned ? '📌 Відкріпити' : '📌 Закріпити'}
+                    </button>
                   </div>
                 )}
               </div>
             </div>
           )}
         </div>
+
+        {message.replyTo && !isDeleted && (
+          <div
+            className="flex items-start gap-1 mb-1 pl-2 border-l-2 border-[#5865f2] cursor-pointer hover:opacity-70 transition-opacity"
+            onClick={() => onScrollToMessage(message.replyTo!.messageId)}
+          >
+            <div>
+              <p className="text-[11px] text-[#5865f2] font-medium">
+                {message.replyTo.senderUsername}
+              </p>
+              <p
+                className={`text-[11px] truncate ${isDark ? 'text-gray-500' : 'text-gray-400'}`}
+              >
+                {message.replyTo.text}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* текст або режим редагування */}
         {isEditing ? (

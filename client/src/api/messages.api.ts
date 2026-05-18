@@ -116,3 +116,21 @@ export async function deleteMessageForMe(
   if (!res.ok) throw new Error('Failed to delete message');
   return res.json();
 }
+
+export async function fetchPinnedMessages(
+  token: string,
+  type: 'global' | 'room' | 'private',
+  roomId?: string,
+  userId?: string,
+): Promise<Message[]> {
+  const params = new URLSearchParams({ type });
+  if (roomId) params.append('roomId', roomId);
+  if (userId) params.append('userId', userId);
+
+  const res = await fetch(`${API_URL}/messages/pinned?${params}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error('Failed to fetch pinned messages');
+  return res.json();
+}

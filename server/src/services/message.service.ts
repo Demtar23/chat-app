@@ -10,6 +10,11 @@ type CreateMessageData = {
   roomId?: string;
   receiverId?: string;
   status?: 'sent' | 'delivered' | 'seen';
+  replyTo?: {
+    messageId: string;
+    text: string;
+    senderUsername: string;
+  } | null;
 };
 
 async function createMessage(data: CreateMessageData) {
@@ -153,6 +158,8 @@ async function deleteMessageForAll(messageId: string, userId: string) {
 
   message.isDeleted = true;
   message.text = 'Повідомлення видалено';
+  message.isPinned = false;
+  message.pinnedAt = null;
 
   return message.save();
 }
@@ -163,6 +170,45 @@ async function deleteMessageForMe(messageId: string, userId: string) {
     { $addToSet: { deletedFor: userId } },
     { returnDocument: 'after' },
   );
+}
+
+async function pinMessage(messageId: string) {
+  return Message.findByIdAndUpdate(
+    messageId,
+    { isPinned: true, pinnedAt: new Date() },
+    { returnDocument: 'after' },
+  );
+}
+
+async function unpinMessage(messageId: string) {
+  return Message.findByIdAndUpdate(
+    messageId,
+    { isPinned: false, pinnedAt: null },
+    { returnDocument: 'after' },
+  );
+}
+
+async function getPinnedMessages(filter: {
+  type: 'global' | 'room' | 'private';
+  roomId?: string;
+  senderId?: string;
+  receiverId?: string;
+}) {
+  const query: Record<string, unknown> = {
+    isPinned: true,
+    type: filter.type,
+  };
+
+  if (filter.type === 'room') {
+    query.roomId = filter.roomId;
+  } else if (filter.type === 'private') {
+    query.$or = [
+      { senderId: filter.senderId, receiverId: filter.receiverId },
+      { senderId: filter.receiverId, receiverId: filter.senderId },
+    ];
+  }
+
+  return Message.find(query).sort({ createdAt: 1 });
 }
 
 export const messagesService = {
@@ -178,4 +224,7 @@ export const messagesService = {
   editMessage,
   deleteMessageForAll,
   deleteMessageForMe,
+  pinMessage,
+  unpinMessage,
+  getPinnedMessages,
 };

@@ -103,6 +103,43 @@ async function deleteMessageForMe(req: Request, res: Response) {
 
   return res.status(200).json(message);
 }
+async function pinMessage(req: Request, res: Response) {
+  const messageId = req.params.messageId as string;
+
+  const message = await messagesService.pinMessage(messageId);
+
+  if (!message) {
+    return res.status(404).json({ message: 'Message not found' });
+  }
+
+  return res.status(200).json(message);
+}
+
+async function unpinMessage(req: Request, res: Response) {
+  const messageId = req.params.messageId as string;
+
+  const message = await messagesService.unpinMessage(messageId);
+
+  if (!message) {
+    return res.status(404).json({ message: 'Message not found' });
+  }
+
+  return res.status(200).json(message);
+}
+
+async function getPinnedMessages(req: Request, res: Response) {
+  const { type, roomId, userId } = req.query;
+  const { id: currentUserId } = req.user!;
+
+  const messages = await messagesService.getPinnedMessages({
+    type: type as 'global' | 'room' | 'private',
+    roomId: roomId as string | undefined,
+    senderId: currentUserId,
+    receiverId: userId as string | undefined,
+  });
+
+  return res.status(200).json(messages);
+}
 
 export const messagesController = {
   getGlobalMessages,
@@ -112,4 +149,7 @@ export const messagesController = {
   editMessage,
   deleteMessageForAll,
   deleteMessageForMe,
+  pinMessage,
+  unpinMessage,
+  getPinnedMessages,
 };

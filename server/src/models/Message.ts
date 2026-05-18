@@ -75,6 +75,25 @@ const messageSchema = new Schema(
       type: [String],
       default: [],
     },
+
+    replyTo: {
+      type: {
+        messageId: { type: String, default: null },
+        text: { type: String, default: null },
+        senderUsername: { type: String, default: null },
+      },
+      default: null,
+    },
+
+    isPinned: {
+      type: Boolean,
+      default: false,
+    },
+
+    pinnedAt: {
+      type: Date,
+      default: null,
+    },
   },
 
   {

@@ -1,8 +1,33 @@
 import { Server } from 'socket.io';
 import { SocketWithUser } from '../../types/socket';
 import { messagesService } from '../../services/message.service';
-import { SendMessageData } from '../../types/message';
+import { ReplyTo, SendMessageData } from '../../types/message';
 import { onlineUsers } from '../../state/onlineUsers';
+
+function emitPrivateEvent(
+  io: Server,
+  socket: SocketWithUser,
+  message: { senderId: string; receiverId?: string | null },
+  event: string,
+  payload: unknown,
+) {
+  socket.emit(event, payload);
+
+  const peerId =
+    message.senderId === socket.user.id
+      ? message.receiverId
+      : message.senderId;
+
+  if (!peerId) {
+    return;
+  }
+
+  const peerSocket = onlineUsers.get(peerId);
+
+  if (peerSocket) {
+    io.to(peerSocket.socketId).emit(event, payload);
+  }
+}
 
 export function messageHandler(io: Server, socket: SocketWithUser) {
   socket.on('send_message', async (data: SendMessageData) => {
@@ -17,6 +42,7 @@ export function messageHandler(io: Server, socket: SocketWithUser) {
       senderId: socket.user.id,
       senderUsername: socket.user.username,
       type: 'global',
+      replyTo: data.replyTo ?? null,
     });
 
     io.emit('receive_message', message);
@@ -24,7 +50,11 @@ export function messageHandler(io: Server, socket: SocketWithUser) {
 
   socket.on(
     'room:message:send',
-    async (data: { roomId: string; text: string }) => {
+    async (data: {
+      roomId: string;
+      text: string;
+      replyTo?: ReplyTo | null;
+    }) => {
       const text = data.text.trim();
 
       if (!text) {
@@ -37,6 +67,7 @@ export function messageHandler(io: Server, socket: SocketWithUser) {
         senderUsername: socket.user.username,
         type: 'room',
         roomId: data.roomId,
+        replyTo: data.replyTo ?? null,
       });
 
       io.to(data.roomId).emit('room:message:receive', message);
@@ -45,7 +76,11 @@ export function messageHandler(io: Server, socket: SocketWithUser) {
 
   socket.on(
     'private:send',
-    async (data: { receiverId: string; text: string }) => {
+    async (data: {
+      receiverId: string;
+      text: string;
+      replyTo?: ReplyTo | null;
+    }) => {
       const text = data.text.trim();
 
       if (!text) {
@@ -61,6 +96,7 @@ export function messageHandler(io: Server, socket: SocketWithUser) {
         type: 'private',
         receiverId: data.receiverId,
         status: isReceiverOnline ? 'delivered' : 'sent',
+        replyTo: data.replyTo ?? null,
       });
 
       socket.emit('private:receive', message);
@@ -96,11 +132,7 @@ export function messageHandler(io: Server, socket: SocketWithUser) {
       } else if (message.type === 'room' && message.roomId) {
         io.to(message.roomId.toString()).emit('message:edited', message);
       } else if (message.type === 'private') {
-        socket.emit('message:edited', message);
-        const receiverSocket = onlineUsers.get(message.receiverId!);
-        if (receiverSocket) {
-          io.to(receiverSocket.socketId).emit('message:edited', message);
-        }
+        emitPrivateEvent(io, socket, message, 'message:edited', message);
       }
     },
   );
@@ -120,17 +152,45 @@ export function messageHandler(io: Server, socket: SocketWithUser) {
     } else if (message.type === 'room' && message.roomId) {
       io.to(message.roomId.toString()).emit('message:deleted', message);
     } else if (message.type === 'private') {
-      socket.emit('message:deleted', message);
-      const receiverSocket = onlineUsers.get(message.receiverId!);
-      if (receiverSocket) {
-        io.to(receiverSocket.socketId).emit('message:deleted', message);
-      }
+      emitPrivateEvent(io, socket, message, 'message:deleted', message);
+    }
+  });
+
+  socket.on('message:pin', async (data: { messageId: string }) => {
+    const message = await messagesService.pinMessage(data.messageId);
+
+    if (!message) {
+      return;
+    }
+
+    if (message.type === 'global') {
+      io.emit('message:pinned', message);
+    } else if (message.type === 'room' && message.roomId) {
+      io.to(message.roomId.toString()).emit('message:pinned', message);
+    } else if (message.type === 'private') {
+      emitPrivateEvent(io, socket, message, 'message:pinned', message);
+    }
+  });
+
+  socket.on('message:unpin', async (data: { messageId: string }) => {
+    const message = await messagesService.unpinMessage(data.messageId);
+
+    if (!message) {
+      return;
+    }
+
+    if (message.type === 'global') {
+      io.emit('message:unpinned', message);
+    } else if (message.type === 'room' && message.roomId) {
+      io.to(message.roomId.toString()).emit('message:unpinned', message);
+    } else if (message.type === 'private') {
+      emitPrivateEvent(io, socket, message, 'message:unpinned', message);
     }
   });
 
   socket.on('message:delete:me', async (data: { messageId: string }) => {
     await messagesService.deleteMessageForMe(data.messageId, socket.user.id);
-    
+
     socket.emit('message:deleted:me', { messageId: data.messageId });
   });
 }
