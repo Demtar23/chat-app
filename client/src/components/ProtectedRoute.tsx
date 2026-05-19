@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { AppLoader } from './AppLoader';
 
 type Props = {
   children: React.ReactNode;
@@ -9,11 +10,7 @@ export function ProtectedRoute({ children }: Props) {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
-    return (
-      <div className="h-screen flex items-center justify-center bg-[#1e1f22]">
-        <span className="text-gray-400 text-sm">Loading...</span>
-      </div>
-    );
+    return <AppLoader label="Завантаження чату…" variant="fullscreen" />;
   }
 
   if (!user) {

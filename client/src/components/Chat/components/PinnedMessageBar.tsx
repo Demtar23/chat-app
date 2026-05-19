@@ -29,7 +29,7 @@ export function PinnedMessageBar({
 
   return (
     <div
-      className={`flex items-center gap-2 px-4 py-2 border-b cursor-pointer ${
+      className={`flex items-center gap-2 px-4 py-2 border-b cursor-pointer transition-colors duration-200 ${
         isDark
           ? 'bg-[#2b2d31] border-[#1e1f22] hover:bg-[#35373c]'
           : 'bg-gray-50 border-gray-200 hover:bg-gray-100'

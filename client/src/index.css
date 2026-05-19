@@ -1,2 +1,14 @@
 @import "tailwindcss";
 
+@keyframes chatFadeIn {
+  from {
+    opacity: 0.72;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.chat-main-panel {
+  animation: chatFadeIn 0.22s ease-out;
+}

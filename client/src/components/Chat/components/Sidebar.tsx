@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { RoomsListSkeleton } from './ChatSkeletons';
 import type { Room } from '../../../types/room';
 import type { ActiveChat } from '../../../types/chat';
 import type { OnlineUser } from '../../../types/socket';
@@ -15,6 +16,7 @@ type Props = {
   onSelectRoom: (roomId: string, roomName: string) => void;
   onSelectPrivate: (userId: string, username: string) => void;
   onCreateRoom: () => void;
+  isRoomsLoading?: boolean;
 };
 
 export function Sidebar({
@@ -28,6 +30,7 @@ export function Sidebar({
   onSelectRoom,
   onSelectPrivate,
   onCreateRoom,
+  isRoomsLoading = false,
 }: Props) {
   const [openSections, setOpenSections] = useState({
     rooms: true,
@@ -63,13 +66,13 @@ export function Sidebar({
 
   return (
     <div
-      className={`w-52 border-r flex flex-col flex-shrink-0 ${bg} ${border}`}
+      className={`w-52 border-r flex flex-col flex-shrink-0 transition-colors duration-200 ${bg} ${border}`}
     >
       {/* Global */}
       <div className={`p-2 border-b ${border}`}>
         <button
           onClick={onSelectGlobal}
-          className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors ${
+          className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors duration-150 ${
             activeChat.type === 'global' ? activeItem : hoverItem
           }`}
         >
@@ -100,23 +103,32 @@ export function Sidebar({
 
           {openSections.rooms && (
             <div className="flex flex-col">
-              {rooms.length === 0 && (
-                <p className={`text-xs px-3 py-1 ${textMuted}`}>Немає кімнат</p>
+              {isRoomsLoading ? (
+                <RoomsListSkeleton isDark={isDark} />
+              ) : (
+                <>
+                  {rooms.length === 0 && (
+                    <p className={`text-xs px-3 py-1 ${textMuted}`}>
+                      Немає кімнат
+                    </p>
+                  )}
+                  {rooms.map((room) => (
+                    <button
+                      key={room._id}
+                      onClick={() => onSelectRoom(room._id, room.name)}
+                      className={`flex items-center gap-2 px-3 py-1.5 text-sm transition-colors duration-150 ${
+                        activeChat.type === 'room' &&
+                        activeChat.roomId === room._id
+                          ? activeItem
+                          : hoverItem
+                      }`}
+                    >
+                      <span className={textMuted}>#</span>
+                      <span className={textPrimary}>{room.name}</span>
+                    </button>
+                  ))}
+                </>
               )}
-              {rooms.map((room) => (
-                <button
-                  key={room._id}
-                  onClick={() => onSelectRoom(room._id, room.name)}
-                  className={`flex items-center gap-2 px-3 py-1.5 text-sm transition-colors ${
-                    activeChat.type === 'room' && activeChat.roomId === room._id
-                      ? activeItem
-                      : hoverItem
-                  }`}
-                >
-                  <span className={textMuted}>#</span>
-                  <span className={textPrimary}>{room.name}</span>
-                </button>
-              ))}
             </div>
           )}
         </div>

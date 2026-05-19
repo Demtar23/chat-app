@@ -9,7 +9,12 @@ type Props = {
   onToggleTheme: () => void;
 };
 
-export function TopBar({ title, onlineCount, isDark, onToggleTheme }: Props) {
+export function TopBar({
+  title,
+  onlineCount,
+  isDark,
+  onToggleTheme,
+}: Props) {
   const { user } = useAuth();
   const [showProfile, setShowProfile] = useState(false);
 
@@ -20,11 +25,10 @@ export function TopBar({ title, onlineCount, isDark, onToggleTheme }: Props) {
   return (
     <>
       <div
-        className={`h-12 border-b flex items-center px-4 justify-between flex-shrink-0 ${
+        className={`h-12 border-b flex items-center px-4 justify-between flex-shrink-0 transition-colors duration-200 ${
           isDark ? 'bg-[#313338]' : 'bg-white'
         } ${border}`}
       >
-        {/* Ліва частина */}
         <div className="flex items-center gap-2">
           <span className={`font-medium text-[15px] ${textPrimary}`}>
             {title}
@@ -34,9 +38,7 @@ export function TopBar({ title, onlineCount, isDark, onToggleTheme }: Props) {
           </span>
         </div>
 
-        {/* Права частина */}
         <div className="flex items-center gap-2">
-          {/* Перемикач теми */}
           <button
             onClick={onToggleTheme}
             className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border ${
@@ -48,10 +50,9 @@ export function TopBar({ title, onlineCount, isDark, onToggleTheme }: Props) {
             {isDark ? '☀️ Light' : '🌙 Dark'}
           </button>
 
-          {/* Кнопка профілю */}
           <button
             onClick={() => setShowProfile(true)}
-            className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium transition-opacity hover:opacity-80 bg-purple-100 text-purple-800`}
+            className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium transition-opacity hover:opacity-80 bg-purple-100 text-purple-800"
             title={user?.username}
           >
             {user?.username.slice(0, 2).toUpperCase()}

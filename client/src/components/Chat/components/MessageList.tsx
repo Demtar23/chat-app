@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { MessageItem } from './MessageItem';
+import { MessageThreadSkeleton } from './ChatSkeletons';
 import type { Message, ReplyTo } from '../../../types/message';
 
 type Props = {
@@ -16,6 +17,7 @@ type Props = {
   onScrollToMessage: (messageId: string) => void;
   pinnedMessageIds: string[];
   onActivePinChange: (index: number) => void;
+  isLoading?: boolean;
 };
 
 export function MessageList({
@@ -32,18 +34,21 @@ export function MessageList({
   onScrollToMessage,
   pinnedMessageIds,
   onActivePinChange,
+  isLoading = false,
 }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (isLoading) return;
     requestAnimationFrame(() => {
-      bottomRef.current?.scrollIntoView({ behavior: 'auto' });// було smooth
+      bottomRef.current?.scrollIntoView({ behavior: 'auto' }); // було smooth
     });
-  }, [messages]);
+  }, [messages, isLoading]);
 
-  // замінити весь useEffect з scroll listener
   useEffect(() => {
+    if (isLoading) return;
+
     if (pinnedMessageIds.length === 0) {
       onActivePinChange(0);
       return;
@@ -84,30 +89,38 @@ export function MessageList({
 
     container.addEventListener('scroll', calculateActivePin);
     return () => container.removeEventListener('scroll', calculateActivePin);
-  }, [pinnedMessageIds, messages]);
+  }, [pinnedMessageIds, messages, isLoading]);
 
   return (
     <div
       ref={containerRef}
-      className={`messages-container flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3 ${isDark ? 'bg-[#313338]' : 'bg-white'}`}
+      className={`messages-container flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3 min-h-0 transition-opacity duration-200 ease-out ${
+        isDark ? 'bg-[#313338]' : 'bg-white'
+      } ${isLoading ? 'opacity-95' : 'opacity-100'}`}
     >
-      {messages.map((message) => (
-        <MessageItem
-          key={message._id}
-          message={message}
-          isDark={isDark}
-          currentUserId={currentUserId}
-          onReact={onReact}
-          onEdit={onEdit}
-          onDeleteForAll={onDeleteForAll}
-          onDeleteForMe={onDeleteForMe}
-          onReply={onReply}
-          onPin={onPin}
-          isHighlighted={highlightedId === message._id}
-          onScrollToMessage={onScrollToMessage}
-        />
-      ))}
-      <div ref={bottomRef} />
+      {isLoading ? (
+        <MessageThreadSkeleton isDark={isDark} />
+      ) : (
+        <>
+          {messages.map((message) => (
+            <MessageItem
+              key={message._id}
+              message={message}
+              isDark={isDark}
+              currentUserId={currentUserId}
+              onReact={onReact}
+              onEdit={onEdit}
+              onDeleteForAll={onDeleteForAll}
+              onDeleteForMe={onDeleteForMe}
+              onReply={onReply}
+              onPin={onPin}
+              isHighlighted={highlightedId === message._id}
+              onScrollToMessage={onScrollToMessage}
+            />
+          ))}
+          <div ref={bottomRef} />
+        </>
+      )}
     </div>
   );
 }
