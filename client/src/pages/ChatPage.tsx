@@ -24,6 +24,7 @@ import { ReplyPreview } from '../components/Chat/components/ReplyPreview';
 import { PinnedMessageBar } from '../components/Chat/components/PinnedMessageBar';
 import { PinnedMessageBarSkeleton } from '../components/Chat/components/ChatSkeletons';
 import { AppLoader } from '../components/AppLoader';
+import { UserHoverCard } from '../components/Chat/components/UserHoverCard';
 
 function getActiveChatKey(c: ActiveChat): string {
   if (c.type === 'global') return 'global';
@@ -50,6 +51,15 @@ export function ChatPage() {
   const [isRoomsLoading, setIsRoomsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isSocketDisconnected, setIsSocketDisconnected] = useState(false);
+
+  const [hoveredUser, setHoveredUser] = useState<UserProfile | null>(null);
+
+  const [hoverPosition, setHoverPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const sendingFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -527,6 +537,20 @@ export function ChatPage() {
     socket?.emit('reaction:toggle', { messageId, emoji });
   }
 
+  function isUserOnline(userId: string) {
+    return onlineUsers.some((u) => u.userId === userId);
+  }
+
+  function handleStartPrivateChat(userId: string, username: string) {
+    setActiveChat({
+      type: 'private',
+      userId,
+      username,
+    });
+
+    setHoveredUser(null);
+  }
+
   if (!accessToken || !user) {
     return null;
   }
@@ -596,6 +620,20 @@ export function ChatPage() {
             pinnedMessageIds={pinnedMessages.map((m) => m._id)}
             onActivePinChange={setActivePinnedIndex}
             isLoading={isMessagesLoading}
+            allUsers={allUsers}
+            onUserHover={(user, position) => {
+              if (hoverTimeoutRef.current) {
+                clearTimeout(hoverTimeoutRef.current);
+              }
+
+              setHoveredUser(user);
+              setHoverPosition(position);
+            }}
+            onUserLeave={() => {
+              hoverTimeoutRef.current = setTimeout(() => {
+                setHoveredUser(null);
+              }, 150);
+            }}
           />
           <TypingIndicator typingUsers={typingUsers} isDark={isDark} />
 
@@ -633,6 +671,32 @@ export function ChatPage() {
             setShowCreateRoom(false);
           }}
         />
+      )}
+
+      {hoveredUser && hoverPosition && (
+        <div
+          className="fixed z-[999]"
+          style={{
+            left: hoverPosition.x,
+            top: hoverPosition.y,
+          }}
+          onMouseEnter={() => {
+            if (hoverTimeoutRef.current) {
+              clearTimeout(hoverTimeoutRef.current);
+            }
+          }}
+          onMouseLeave={() => {
+            setHoveredUser(null);
+          }}
+        >
+          <UserHoverCard
+            user={hoveredUser}
+            isDark={isDark}
+            isOnline={isUserOnline(hoveredUser._id)}
+            onStartChat={handleStartPrivateChat}
+            onClose={() => setHoveredUser(null)}
+          />
+        </div>
       )}
     </div>
   );

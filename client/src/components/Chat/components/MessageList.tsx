@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { MessageItem } from './MessageItem';
 import { MessageThreadSkeleton } from './ChatSkeletons';
 import type { Message, ReplyTo } from '../../../types/message';
+import type { UserProfile } from '../../../types/user';
 
 type Props = {
   messages: Message[];
@@ -18,6 +19,9 @@ type Props = {
   pinnedMessageIds: string[];
   onActivePinChange: (index: number) => void;
   isLoading?: boolean;
+  onUserHover: (user: UserProfile, position: { x: number; y: number }) => void;
+  onUserLeave: () => void;
+  allUsers: UserProfile[];
 };
 
 export function MessageList({
@@ -35,6 +39,9 @@ export function MessageList({
   pinnedMessageIds,
   onActivePinChange,
   isLoading = false,
+  onUserHover,
+  onUserLeave,
+  allUsers,
 }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -116,6 +123,9 @@ export function MessageList({
               onPin={onPin}
               isHighlighted={highlightedId === message._id}
               onScrollToMessage={onScrollToMessage}
+              onUserHover={onUserHover}
+              onUserLeave={onUserLeave}
+              allUsers={allUsers}
             />
           ))}
           <div ref={bottomRef} />

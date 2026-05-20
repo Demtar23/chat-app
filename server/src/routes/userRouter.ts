@@ -1,16 +1,14 @@
-import { Router, Response, Request } from 'express';
+import { Router } from 'express';
 import { authMiddleware } from '../middlewares/auth.middleware';
-import { User } from '../models/User';
+import { catchError } from '../utils/catchError';
+import { userController } from '../controllers/user.controller';
 
 export const userRouter = Router();
 
-userRouter.get('/me', authMiddleware, (req, res: Response) => {
-  return res.status(200).json({
-    user: req.user,
-  });
-});
+userRouter.get('/me', authMiddleware, catchError(userController.getMe));
 
-userRouter.get('/all', authMiddleware, async (req: Request, res: Response) => {
-  const users = await User.find({}, { passwordHash: 0 });
-  return res.status(200).json(users);
-});
+userRouter.get('/all', authMiddleware, catchError(userController.getAllUsers));
+
+userRouter.get('/:id', authMiddleware, catchError(userController.getUserById));
+
+userRouter.patch('/me', authMiddleware, catchError(userController.updateMe));

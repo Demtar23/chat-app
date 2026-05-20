@@ -13,6 +13,21 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+
+    bio: {
+      type: String,
+      default: '',
+      maxLength: 200,
+      trim: true,
+    },
+    avatar: {
+      type: String,
+      default: null,
+    },
+    lastSeen: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true },
 );

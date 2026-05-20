@@ -3,6 +3,7 @@ import { ReactionBar } from './ReactionBar';
 import { ReactionPicker } from './ReactionPicker';
 import { MessageStatus } from './MessageStatus';
 import type { Message, ReplyTo } from '../../../types/message';
+import type { UserProfile } from '../../../types/user';
 
 const COLORS = [
   'text-[#5DCAA5]',
@@ -43,6 +44,9 @@ type Props = {
   isHighlighted: boolean;
   onScrollToMessage: (messageId: string) => void;
   onPin: (messageId: string, isPinned: boolean) => void;
+  onUserHover: (user: UserProfile, position: { x: number; y: number }) => void;
+  onUserLeave: () => void;
+  allUsers: UserProfile[];
 };
 
 export function MessageItem({
@@ -57,6 +61,9 @@ export function MessageItem({
   isHighlighted,
   onScrollToMessage,
   onPin,
+  onUserHover,
+  onUserLeave,
+  allUsers,
 }: Props) {
   const [showPicker, setShowPicker] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -67,7 +74,7 @@ export function MessageItem({
   const menuRef = useRef<HTMLDivElement>(null);
 
   const index = getColorIndex(message.senderUsername);
-  const nameColor = COLORS[index];
+  // const nameColor = COLORS[index];
   const avatarColor = AVATAR_COLORS[index];
 
   const isOwnMessage = message.senderId === currentUserId;
@@ -75,6 +82,11 @@ export function MessageItem({
 
   const isDeleted = message.isDeleted;
   const isDeletedForMe = message.deletedFor?.includes(currentUserId);
+
+  const hoverUser = allUsers.find((u) => u._id === message.senderId) ?? {
+    _id: message.senderId,
+    username: message.senderUsername,
+  };
 
   useEffect(() => {
     if (!showPicker) return;
@@ -121,18 +133,55 @@ export function MessageItem({
       }`}
     >
       <div
-        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium flex-shrink-0 mt-0.5 ${avatarColor.bg} ${avatarColor.text}`}
+        onMouseEnter={(e) => {
+          const rect = e.currentTarget.getBoundingClientRect();
+
+          onUserHover(hoverUser, {
+            x: rect.right + 12,
+            y: rect.top,
+          });
+        }}
+        onMouseLeave={onUserLeave}
+        className="relative flex-shrink-0 mt-0.5"
       >
-        {message.senderUsername.slice(0, 2).toUpperCase()}
+        {hoverUser.avatar ? (
+          <img
+            src={hoverUser.avatar}
+            alt={hoverUser.username}
+            className="w-8 h-8 rounded-full object-cover"
+          />
+        ) : (
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${avatarColor.bg} ${avatarColor.text}`}
+          >
+            {message.senderUsername.slice(0, 2).toUpperCase()}
+          </div>
+        )}
       </div>
 
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-2 mb-0.5">
-          <span className={`text-[13px] font-medium ${nameColor}`}>
+          <span
+            onMouseEnter={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+
+              onUserHover(hoverUser, {
+                x: rect.right + 12,
+                y: rect.top,
+              });
+            }}
+            onMouseLeave={onUserLeave}
+            className={`text-[13px] font-medium cursor-pointer hover:underline ${
+              isDark ? 'text-white' : 'text-gray-900'
+            }`}
+          >
             {message.senderUsername}
           </span>
+
           <span
-            className={`text-[11px] ${isDark ? 'text-gray-500' : 'text-gray-400'}`}
+            className={`text-[11px] ${
+              isDark ? 'text-gray-500' : 'text-gray-400'
+            }`}
           >
             {formatTime(message.createdAt)}
           </span>

@@ -13,7 +13,7 @@ export function connectSocket(token: string): Socket {
     socket = null;
   }
 
-  socket = io('http://localhost:5000', {
+  socket = io(import.meta.env.VITE_BACKEND_URL, {
     transports: ['websocket'],
     withCredentials: true,
     auth: {

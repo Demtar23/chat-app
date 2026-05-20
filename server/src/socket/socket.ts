@@ -8,6 +8,7 @@ import { roomHandler } from './handlers/room.handler';
 import { reactionHandler } from './handlers/reaction.handler';
 import { messagesService } from '../services/message.service';
 import { statusHandler } from './handlers/status.handler';
+import { userService } from '../services/user.service';
 
 export function initSocket(io: Server) {
   io.use(socketAuth);
@@ -43,10 +44,12 @@ export function initSocket(io: Server) {
       socket.emit('online_users', Array.from(onlineUsers.values()));
     });
 
-    socket.on('disconnect', () => {
+    socket.on('disconnect', async () => {
       onlineUsers.delete(user.id);
 
       io.emit('online_users', Array.from(onlineUsers.values()));
+
+      await userService.updateLastSeen(user.id);
 
       console.log('Online users', Array.from(onlineUsers.values()));
     });
