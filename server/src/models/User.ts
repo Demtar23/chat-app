@@ -28,6 +28,10 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    bannerColor: {
+      type: String,
+      default: null,
+    },
   },
   { timestamps: true },
 );

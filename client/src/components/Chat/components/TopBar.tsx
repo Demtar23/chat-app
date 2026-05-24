@@ -1,12 +1,13 @@
-import { useState } from 'react';
 import { useAuth } from '../../../context/AuthContext';
-import { ProfileModal } from './ProfileModal';
+import { Avatar } from './Avatar';
 
 type Props = {
   title: string;
   onlineCount: number;
   isDark: boolean;
   onToggleTheme: () => void;
+  onOpenMyProfile: () => void;
+  myProfile?: { username: string; avatar?: string | null };
 };
 
 export function TopBar({
@@ -14,9 +15,10 @@ export function TopBar({
   onlineCount,
   isDark,
   onToggleTheme,
+  onOpenMyProfile,
+  myProfile,
 }: Props) {
   const { user } = useAuth();
-  const [showProfile, setShowProfile] = useState(false);
 
   const border = isDark ? 'border-[#1e1f22]' : 'border-gray-200';
   const textMuted = isDark ? 'text-gray-400' : 'text-gray-500';
@@ -51,21 +53,19 @@ export function TopBar({
           </button>
 
           <button
-            onClick={() => setShowProfile(true)}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium transition-opacity hover:opacity-80 bg-purple-100 text-purple-800"
+            onClick={onOpenMyProfile}
+            className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium transition-opacity hover:opacity-80 bg-purple-100 text-purple-800 cursor-pointer"
             title={user?.username}
           >
-            {user?.username.slice(0, 2).toUpperCase()}
+            <Avatar
+              username={user?.username ?? ''}
+              avatar={myProfile?.avatar}
+              size="sm"
+              isDark={isDark}
+            />
           </button>
         </div>
       </div>
-
-      {showProfile && (
-        <ProfileModal
-          isDark={isDark}
-          onClose={() => setShowProfile(false)}
-        />
-      )}
     </>
   );
 }

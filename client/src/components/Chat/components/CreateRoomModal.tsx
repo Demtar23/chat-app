@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { getSocket } from '../../../services/socket';
 import type { Room } from '../../../types/room';
 import { createRoom } from '../../../api/rooms.api';
+import { notify } from '../../../utils/toast';
 
 type Props = {
   isDark: boolean;
@@ -31,8 +32,9 @@ export function CreateRoomModal({
       const socket = getSocket();
       socket?.emit('room:created', room);
       onCreated(room);
+      notify.success('Кімнату створено');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      notify.error(err instanceof Error ? err.message : 'Не вдалося створити кімнату');
     } finally {
       setIsLoading(false);
     }

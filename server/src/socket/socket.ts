@@ -9,6 +9,7 @@ import { reactionHandler } from './handlers/reaction.handler';
 import { messagesService } from '../services/message.service';
 import { statusHandler } from './handlers/status.handler';
 import { userService } from '../services/user.service';
+import { userHandler } from './handlers/user.handler';
 
 export function initSocket(io: Server) {
   io.use(socketAuth);
@@ -39,8 +40,13 @@ export function initSocket(io: Server) {
     roomHandler(io, authSocket);
     reactionHandler(io, authSocket);
     statusHandler(io, authSocket);
+    userHandler(io, authSocket);
 
     socket.on('users:get', () => {
+      socket.emit('online_users', Array.from(onlineUsers.values()));
+    });
+
+    socket.on('online_users:request', () => {
       socket.emit('online_users', Array.from(onlineUsers.values()));
     });
 

@@ -1,11 +1,10 @@
-import type { Room } from "../types/room";
+import type { Room } from '../types/room';
+import { fetchWithAuth } from './fetchWithAuth';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 export async function fetchRooms(token: string): Promise<Room[]> {
-  const res = await fetch(`${API_URL}/rooms`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const res = await fetchWithAuth(`${API_URL}/rooms`, {}, token);
 
   if (!res.ok) {
     throw new Error('Failed to fetch rooms');
@@ -19,14 +18,14 @@ export async function createRoom(
   name: string,
   description: string,
 ): Promise<Room> {
-  const res = await fetch(`${API_URL}/rooms`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
+  const res = await fetchWithAuth(
+    `${API_URL}/rooms`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ name, description }),
     },
-    body: JSON.stringify({ name, description }),
-  });
+    token,
+  );
 
   if (!res.ok) {
     const error = await res.json();
@@ -37,10 +36,13 @@ export async function createRoom(
 }
 
 export async function joinRoom(token: string, roomId: string): Promise<Room> {
-  const res = await fetch(`${API_URL}/rooms/${roomId}/join`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const res = await fetchWithAuth(
+    `${API_URL}/rooms/${roomId}/join`,
+    {
+      method: 'POST',
+    },
+    token,
+  );
 
   if (!res.ok) {
     const error = await res.json();
@@ -51,10 +53,13 @@ export async function joinRoom(token: string, roomId: string): Promise<Room> {
 }
 
 export async function leaveRoom(token: string, roomId: string): Promise<Room> {
-  const res = await fetch(`${API_URL}/rooms/${roomId}/leave`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const res = await fetchWithAuth(
+    `${API_URL}/rooms/${roomId}/leave`,
+    {
+      method: 'POST',
+    },
+    token,
+  );
 
   if (!res.ok) {
     const error = await res.json();

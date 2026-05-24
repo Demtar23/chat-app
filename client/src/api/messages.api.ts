@@ -1,4 +1,5 @@
 import type { Message } from '../types/message';
+import { fetchWithAuth } from './fetchWithAuth';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -6,9 +7,11 @@ export async function fetchGlobalMessages(
   token: string,
   page = 1,
 ): Promise<Message[]> {
-  const res = await fetch(`${API_URL}/messages/global?page=${page}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const res = await fetchWithAuth(
+    `${API_URL}/messages/global?page=${page}`,
+    {},
+    token,
+  );
 
   if (!res.ok) {
     throw new Error('Failed to fetch messages');
@@ -22,9 +25,11 @@ export async function fetchRoomMessages(
   roomId: string,
   page = 1,
 ): Promise<Message[]> {
-  const res = await fetch(`${API_URL}/messages/room/${roomId}?page=${page}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const res = await fetchWithAuth(
+    `${API_URL}/messages/room/${roomId}?page=${page}`,
+    {},
+    token,
+  );
 
   if (!res.ok) {
     throw new Error('Failed to fetch room messages');
@@ -38,11 +43,10 @@ export async function fetchPrivateMessages(
   userId: string,
   page = 1,
 ): Promise<Message[]> {
-  const res = await fetch(
+  const res = await fetchWithAuth(
     `${API_URL}/messages/private/${userId}?page=${page}`,
-    {
-      headers: { Authorization: `Bearer ${token}` },
-    },
+    {},
+    token,
   );
 
   if (!res.ok) {
@@ -57,14 +61,14 @@ export async function toggleReaction(
   messageId: string,
   emoji: string,
 ): Promise<Message> {
-  const res = await fetch(`${API_URL}/messages/${messageId}/react`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
+  const res = await fetchWithAuth(
+    `${API_URL}/messages/${messageId}/react`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ emoji }),
     },
-    body: JSON.stringify({ emoji }),
-  });
+    token,
+  );
 
   if (!res.ok) {
     throw new Error('Failed to toggle reaction');
@@ -78,14 +82,14 @@ export async function editMessage(
   messageId: string,
   text: string,
 ): Promise<Message> {
-  const res = await fetch(`${API_URL}/messages/${messageId}`, {
-    method: 'PATCH',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
+  const res = await fetchWithAuth(
+    `${API_URL}/messages/${messageId}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({ text }),
     },
-    body: JSON.stringify({ text }),
-  });
+    token,
+  );
 
   if (!res.ok) throw new Error('Failed to edit message');
   return res.json();
@@ -95,10 +99,13 @@ export async function deleteMessageForAll(
   token: string,
   messageId: string,
 ): Promise<Message> {
-  const res = await fetch(`${API_URL}/messages/${messageId}`, {
-    method: 'DELETE',
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const res = await fetchWithAuth(
+    `${API_URL}/messages/${messageId}`,
+    {
+      method: 'DELETE',
+    },
+    token,
+  );
 
   if (!res.ok) throw new Error('Failed to delete message');
   return res.json();
@@ -108,10 +115,13 @@ export async function deleteMessageForMe(
   token: string,
   messageId: string,
 ): Promise<Message> {
-  const res = await fetch(`${API_URL}/messages/${messageId}/me`, {
-    method: 'DELETE',
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const res = await fetchWithAuth(
+    `${API_URL}/messages/${messageId}/me`,
+    {
+      method: 'DELETE',
+    },
+    token,
+  );
 
   if (!res.ok) throw new Error('Failed to delete message');
   return res.json();
@@ -127,9 +137,11 @@ export async function fetchPinnedMessages(
   if (roomId) params.append('roomId', roomId);
   if (userId) params.append('userId', userId);
 
-  const res = await fetch(`${API_URL}/messages/pinned?${params}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const res = await fetchWithAuth(
+    `${API_URL}/messages/pinned?${params}`,
+    {},
+    token,
+  );
 
   if (!res.ok) throw new Error('Failed to fetch pinned messages');
   return res.json();

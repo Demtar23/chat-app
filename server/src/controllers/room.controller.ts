@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { roomsService } from '../services/room.service';
+import { ConflictError, NotFoundError } from '../errors/AppError';
 
 async function createRoom(req: Request, res: Response) {
   const { name, description } = req.body;
@@ -8,9 +9,7 @@ async function createRoom(req: Request, res: Response) {
   const existingRoom = await roomsService.getRoomByName(name);
 
   if (existingRoom) {
-    return res.status(409).json({
-      message: 'Room already exists',
-    });
+    throw new ConflictError('Room already exists');
   }
 
   const room = await roomsService.createRoom(
@@ -33,9 +32,7 @@ async function getRoomById(req: Request, res: Response) {
   const room = await roomsService.getRoomById(roomId);
 
   if (!room) {
-    return res.status(404).json({
-      message: 'Room not found',
-    });
+    throw new NotFoundError('Room not found');
   }
 
   return res.status(200).json(room);
@@ -48,9 +45,7 @@ async function joinRoom(req: Request, res: Response) {
   const room = await roomsService.getRoomById(roomId);
 
   if (!room) {
-    return res.status(404).json({
-      message: 'Room not found',
-    });
+    throw new NotFoundError('Room not found');
   }
 
   const updatedRoom = await roomsService.joinRoom(roomId, userId);
@@ -66,9 +61,7 @@ async function leaveRoom(req: Request, res: Response) {
   const room = await roomsService.getRoomById(roomId);
 
   if (!room) {
-    return res.status(404).json({
-      message: 'Room not found',
-    });
+    throw new NotFoundError('Room not found');
   }
 
   const updatedRoom = await roomsService.leaveRoom(roomId, userId);

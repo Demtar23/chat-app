@@ -4,26 +4,27 @@ import { ReactionPicker } from './ReactionPicker';
 import { MessageStatus } from './MessageStatus';
 import type { Message, ReplyTo } from '../../../types/message';
 import type { UserProfile } from '../../../types/user';
+import { Avatar } from './Avatar';
 
-const COLORS = [
-  'text-[#5DCAA5]',
-  'text-[#F0997B]',
-  'text-[#AFA9EC]',
-  'text-[#85B7EB]',
-  'text-[#ED93B1]',
-];
+// const COLORS = [
+//   'text-[#5DCAA5]',
+//   'text-[#F0997B]',
+//   'text-[#AFA9EC]',
+//   'text-[#85B7EB]',
+//   'text-[#ED93B1]',
+// ];
 
-const AVATAR_COLORS = [
-  { bg: 'bg-purple-100', text: 'text-purple-800' },
-  { bg: 'bg-teal-100', text: 'text-teal-800' },
-  { bg: 'bg-orange-100', text: 'text-orange-800' },
-  { bg: 'bg-blue-100', text: 'text-blue-800' },
-  { bg: 'bg-pink-100', text: 'text-pink-800' },
-];
+// const AVATAR_COLORS = [
+//   { bg: 'bg-purple-100', text: 'text-purple-800' },
+//   { bg: 'bg-teal-100', text: 'text-teal-800' },
+//   { bg: 'bg-orange-100', text: 'text-orange-800' },
+//   { bg: 'bg-blue-100', text: 'text-blue-800' },
+//   { bg: 'bg-pink-100', text: 'text-pink-800' },
+// ];
 
-function getColorIndex(str: string) {
-  return str.charCodeAt(0) % COLORS.length;
-}
+// function getColorIndex(str: string) {
+//   return str.charCodeAt(0) % COLORS.length;
+// }
 
 function formatTime(date: string) {
   return new Date(date).toLocaleTimeString('uk-UA', {
@@ -47,6 +48,7 @@ type Props = {
   onUserHover: (user: UserProfile, position: { x: number; y: number }) => void;
   onUserLeave: () => void;
   allUsers: UserProfile[];
+  onOpenProfile: (user: UserProfile) => void;
 };
 
 export function MessageItem({
@@ -64,6 +66,7 @@ export function MessageItem({
   onUserHover,
   onUserLeave,
   allUsers,
+  onOpenProfile,
 }: Props) {
   const [showPicker, setShowPicker] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -73,20 +76,15 @@ export function MessageItem({
   const pickerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const index = getColorIndex(message.senderUsername);
+  // const index = getColorIndex(message.senderUsername);
   // const nameColor = COLORS[index];
-  const avatarColor = AVATAR_COLORS[index];
+  // const avatarColor = AVATAR_COLORS[index];
 
   const isOwnMessage = message.senderId === currentUserId;
   const showStatus = isOwnMessage && message.type === 'private';
 
   const isDeleted = message.isDeleted;
   const isDeletedForMe = message.deletedFor?.includes(currentUserId);
-
-  const hoverUser = allUsers.find((u) => u._id === message.senderId) ?? {
-    _id: message.senderId,
-    username: message.senderUsername,
-  };
 
   useEffect(() => {
     if (!showPicker) return;
@@ -112,6 +110,11 @@ export function MessageItem({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showMenu]);
 
+  const hoverUser = allUsers.find((u) => u._id === message.senderId) ?? {
+    _id: message.senderId,
+    username: message.senderUsername,
+  };
+
   if (isDeletedForMe) {
     return null;
   }
@@ -133,6 +136,10 @@ export function MessageItem({
       }`}
     >
       <div
+        onClick={() => {
+          console.log('Open profile user:', hoverUser);
+          onOpenProfile(hoverUser);
+        }}
         onMouseEnter={(e) => {
           const rect = e.currentTarget.getBoundingClientRect();
 
@@ -142,26 +149,20 @@ export function MessageItem({
           });
         }}
         onMouseLeave={onUserLeave}
-        className="relative flex-shrink-0 mt-0.5"
+        className="relative flex-shrink-0 mt-0.5 cursor-pointer"
       >
-        {hoverUser.avatar ? (
-          <img
-            src={hoverUser.avatar}
-            alt={hoverUser.username}
-            className="w-8 h-8 rounded-full object-cover"
-          />
-        ) : (
-          <div
-            className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${avatarColor.bg} ${avatarColor.text}`}
-          >
-            {message.senderUsername.slice(0, 2).toUpperCase()}
-          </div>
-        )}
+        <Avatar
+          username={hoverUser.username}
+          avatar={hoverUser.avatar}
+          size="sm"
+          isDark={isDark}
+        />
       </div>
 
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-2 mb-0.5">
           <span
+            onClick={() => onOpenProfile(hoverUser)}
             onMouseEnter={(e) => {
               const rect = e.currentTarget.getBoundingClientRect();
 

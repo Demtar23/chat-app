@@ -22,6 +22,7 @@ type Props = {
   onUserHover: (user: UserProfile, position: { x: number; y: number }) => void;
   onUserLeave: () => void;
   allUsers: UserProfile[];
+  onOpenProfile: (user: UserProfile) => void;
 };
 
 export function MessageList({
@@ -42,6 +43,7 @@ export function MessageList({
   onUserHover,
   onUserLeave,
   allUsers,
+  onOpenProfile,
 }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -126,6 +128,7 @@ export function MessageList({
               onUserHover={onUserHover}
               onUserLeave={onUserLeave}
               allUsers={allUsers}
+              onOpenProfile={onOpenProfile}
             />
           ))}
           <div ref={bottomRef} />

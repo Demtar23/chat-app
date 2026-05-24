@@ -1,6 +1,14 @@
 import { Request, Response } from 'express';
 import { usersService } from '../services/auth.service';
 import { jwt } from '../utils/jwt';
+import { ConflictError, UnauthorizedError } from '../errors/AppError';
+
+const COOKIE_OPTIONS = {
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+  httpOnly: true,
+  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+  secure: process.env.NODE_ENV === 'production',
+} as const;
 
 async function register(req: Request, res: Response) {
   const { username, password } = req.body;
@@ -8,9 +16,7 @@ async function register(req: Request, res: Response) {
   const isUserExist = await usersService.findUserByUsername(username);
 
   if (isUserExist) {
-    return res.status(409).json({
-      message: 'User already exists',
-    });
+    throw new ConflictError('User already exists');
   }
 
   const user = await usersService.createUser(username, password);
@@ -23,12 +29,7 @@ async function register(req: Request, res: Response) {
   const accessToken = jwt.generateAccessToken(payload);
   const refreshToken = jwt.generateRefreshToken(payload);
 
-  res.cookie('refreshToken', refreshToken, {
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-    httpOnly: true,
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    secure: process.env.NODE_ENV === 'production',
-  });
+  res.cookie('refreshToken', refreshToken, COOKIE_OPTIONS);
 
   return res.status(201).json({
     message: 'User created',
@@ -46,9 +47,7 @@ async function login(req: Request, res: Response) {
   const user = await usersService.findUserByUsername(username);
 
   if (!user) {
-    return res.status(401).json({
-      message: 'Invalid credentials',
-    });
+    throw new UnauthorizedError('Invalid credentials');
   }
 
   const isPasswordValid = await usersService.validatePassword(
@@ -57,9 +56,7 @@ async function login(req: Request, res: Response) {
   );
 
   if (!isPasswordValid) {
-    return res.status(401).json({
-      message: 'Invalid credentials',
-    });
+    throw new UnauthorizedError('Invalid credentials');
   }
 
   const payload = {
@@ -70,12 +67,7 @@ async function login(req: Request, res: Response) {
   const accessToken = jwt.generateAccessToken(payload);
   const refreshToken = jwt.generateRefreshToken(payload);
 
-  res.cookie('refreshToken', refreshToken, {
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-    httpOnly: true,
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    secure: process.env.NODE_ENV === 'production',
-  });
+  res.cookie('refreshToken', refreshToken, COOKIE_OPTIONS);
 
   return res.status(200).json({
     user: {
@@ -90,37 +82,23 @@ async function refresh(req: Request, res: Response) {
   const refreshToken = req.cookies?.refreshToken ?? '';
 
   if (!refreshToken) {
-    return res.status(401).json({
-      message: 'No refresh token',
-    });
+    throw new UnauthorizedError('No refresh token');
   }
 
   const userData = jwt.validateRefreshToken(refreshToken);
 
   if (!userData) {
-    res.clearCookie('refreshToken', {
-      httpOnly: true,
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      secure: process.env.NODE_ENV === 'production',
-    });
+    res.clearCookie('refreshToken', COOKIE_OPTIONS);
 
-    return res.status(401).json({
-      message: 'Invalid token',
-    });
+    throw new UnauthorizedError('Invalid token');
   }
 
   const user = await usersService.findUserByUsername(userData.username);
 
   if (!user) {
-    res.clearCookie('refreshToken', {
-      httpOnly: true,
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      secure: process.env.NODE_ENV === 'production',
-    });
+    res.clearCookie('refreshToken', COOKIE_OPTIONS);
 
-    return res.status(401).json({
-      message: 'User not found',
-    });
+    throw new UnauthorizedError('User not found');
   }
 
   const payload = {
@@ -140,11 +118,7 @@ async function refresh(req: Request, res: Response) {
 }
 
 async function logout(req: Request, res: Response) {
-  res.clearCookie('refreshToken', {
-    httpOnly: true,
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    secure: process.env.NODE_ENV === 'production',
-  });
+  res.clearCookie('refreshToken', COOKIE_OPTIONS);
 
   return res.sendStatus(204);
 }

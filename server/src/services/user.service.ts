@@ -10,7 +10,7 @@ async function getAllUsers() {
 
 async function updateUser(
   id: string,
-  data: { bio?: string; avatar?: string | null },
+  data: { bio?: string; avatar?: string | null; bannerColor?: string | null },
 ) {
   return User.findByIdAndUpdate(
     id,
@@ -21,6 +21,9 @@ async function updateUser(
 
       ...(data.avatar !== undefined && {
         avatar: data.avatar,
+      }),
+      ...(data.bannerColor !== undefined && {
+        bannerColor: data.bannerColor,
       }),
     },
     {

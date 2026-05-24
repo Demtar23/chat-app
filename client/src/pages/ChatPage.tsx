@@ -19,12 +19,14 @@ import type { Room } from '../types/room';
 import type { ActiveChat } from '../types/chat';
 import { fetchRooms, joinRoom } from '../api/rooms.api';
 import type { UserProfile } from '../types/user';
-import { fetchAllUsers } from '../api/users.api';
+import { fetchAllUsers, fetchMe } from '../api/users.api';
 import { ReplyPreview } from '../components/Chat/components/ReplyPreview';
 import { PinnedMessageBar } from '../components/Chat/components/PinnedMessageBar';
 import { PinnedMessageBarSkeleton } from '../components/Chat/components/ChatSkeletons';
 import { AppLoader } from '../components/AppLoader';
 import { UserHoverCard } from '../components/Chat/components/UserHoverCard';
+import { ProfileModal } from '../components/Chat/components/ProfileModal';
+import { notify } from '../utils/toast';
 
 function getActiveChatKey(c: ActiveChat): string {
   if (c.type === 'global') return 'global';
@@ -41,6 +43,7 @@ export function ChatPage() {
   const [isDark, setIsDark] = useState(true);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const [showCreateRoom, setShowCreateRoom] = useState(false);
+  // const [showProfileModal, setShowProfileModal] = useState(false);
   const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
   const [replyTo, setReplyTo] = useState<ReplyTo | null>(null);
   const [pinnedMessages, setPinnedMessages] = useState<Message[]>([]);
@@ -58,6 +61,11 @@ export function ChatPage() {
     x: number;
     y: number;
   } | null>(null);
+
+  const [selectedProfileUser, setSelectedProfileUser] =
+    useState<UserProfile | null>(null);
+
+  const [myProfile, setMyProfile] = useState<UserProfile | null>(null);
 
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -118,8 +126,18 @@ export function ChatPage() {
   }, [accessToken]);
 
   useEffect(() => {
-    if (!accessToken) return;
+    if (!accessToken) {
+      return;
+    }
     fetchAllUsers(accessToken).then(setAllUsers);
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (!accessToken) {
+      return;
+    }
+
+    fetchMe(accessToken).then(setMyProfile);
   }, [accessToken]);
 
   // завантажуємо повідомлення при зміні активного чату
@@ -209,6 +227,12 @@ export function ChatPage() {
     const token = accessToken; // фіксуємо токен
 
     socket.on('online_users', setOnlineUsers);
+
+    // одразу після підключення слухачів — запитай поточний список
+    if (socket.connected) {
+      socket.emit('online_users:request');
+    }
+
     socket.on('room:created', (room: Room) => {
       setRooms((prev) => [...prev, room]);
     });
@@ -369,6 +393,24 @@ export function ChatPage() {
       });
     });
 
+    socket.on('user:updated', (updated: UserProfile) => {
+      setAllUsers((prev) =>
+        prev.map((u) => (u._id === updated._id ? { ...u, ...updated } : u)),
+      );
+
+      setMyProfile((prev) =>
+        prev?._id === updated._id ? { ...prev, ...updated } : prev,
+      );
+
+      setSelectedProfileUser((prev) => {
+        if (!prev || prev._id !== updated._id) {
+          return prev;
+        }
+
+        return updated;
+      });
+    });
+
     return () => {
       socket.off('online_users');
       socket.off('room:created');
@@ -383,6 +425,8 @@ export function ChatPage() {
       socket.off('message:deleted:me');
       socket.off('message:pinned');
       socket.off('message:unpinned');
+      socket.off('user:updated');
+      socket.off('online_users:request');
     };
   }, [accessToken, activeChat, user?.id, clearSendingFallback]);
 
@@ -459,6 +503,8 @@ export function ChatPage() {
   function sendMessage(text: string) {
     const socket = getSocket();
     if (!socket) {
+      notify.error('Немає підключення до сервера');
+
       return;
     }
 
@@ -551,6 +597,39 @@ export function ChatPage() {
     setHoveredUser(null);
   }
 
+  function openProfile(profile: UserProfile) {
+    setSelectedProfileUser(profile);
+
+    requestAnimationFrame(() => {
+      setSelectedProfileUser(profile);
+    });
+  }
+
+  function handleOpenMyProfile() {
+    if (!myProfile) {
+      return;
+    }
+
+    setSelectedProfileUser(myProfile);
+  }
+
+  function closeProfile() {
+    setSelectedProfileUser(null);
+  }
+
+  function handleProfileUpdate(updated: UserProfile) {
+    setAllUsers((prev) =>
+      prev.map((u) => (u._id === updated._id ? { ...u, ...updated } : u)),
+    );
+
+    if (myProfile?._id === updated._id) {
+      setMyProfile(updated);
+    }
+
+    setSelectedProfileUser((prev) =>
+      prev?._id === updated._id ? updated : prev,
+    );
+  }
   if (!accessToken || !user) {
     return null;
   }
@@ -564,6 +643,8 @@ export function ChatPage() {
         onlineCount={onlineUsers.length}
         isDark={isDark}
         onToggleTheme={() => setIsDark(!isDark)}
+        onOpenMyProfile={handleOpenMyProfile}
+        myProfile={myProfile ?? undefined}
       />
       <div className="flex flex-1 overflow-hidden min-h-0">
         <Sidebar
@@ -634,6 +715,7 @@ export function ChatPage() {
                 setHoveredUser(null);
               }, 150);
             }}
+            onOpenProfile={openProfile}
           />
           <TypingIndicator typingUsers={typingUsers} isDark={isDark} />
 
@@ -695,8 +777,33 @@ export function ChatPage() {
             isOnline={isUserOnline(hoveredUser._id)}
             onStartChat={handleStartPrivateChat}
             onClose={() => setHoveredUser(null)}
+            currentUserId={user.id}
+            onOpenProfile={() => {
+              openProfile(hoveredUser);
+              setHoveredUser(null);
+            }}
           />
         </div>
+      )}
+
+      {selectedProfileUser && (
+        <ProfileModal
+          isDark={isDark}
+          profile={selectedProfileUser}
+          isOwnProfile={selectedProfileUser._id === user.id}
+          isOnline={onlineUsers.some(
+            (u) => u.userId === selectedProfileUser._id,
+          )}
+          onClose={closeProfile}
+          onStartChat={(userId, username) =>
+            setActiveChat({
+              type: 'private',
+              userId,
+              username,
+            })
+          }
+          onProfileUpdate={handleProfileUpdate}
+        />
       )}
     </div>
   );

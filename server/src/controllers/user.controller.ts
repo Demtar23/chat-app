@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { userService } from '../services/user.service';
+import { NotFoundError } from '../errors/AppError';
 
 async function getMe(req: Request, res: Response) {
   const { id } = req.user!;
@@ -7,9 +8,7 @@ async function getMe(req: Request, res: Response) {
   const user = await userService.getUserById(id);
 
   if (!user) {
-    return res.status(404).json({
-      message: 'User not found',
-    });
+    throw new NotFoundError('User not found');
   }
 
   return res.status(200).json(user);
@@ -27,9 +26,7 @@ async function getUserById(req: Request, res: Response) {
   const user = await userService.getUserById(userId);
 
   if (!user) {
-    return res.status(404).json({
-      message: 'User not found',
-    });
+    throw new NotFoundError('User not found');
   }
 
   return res.status(200).json(user);
@@ -37,17 +34,16 @@ async function getUserById(req: Request, res: Response) {
 
 async function updateMe(req: Request, res: Response) {
   const { id } = req.user!;
-  const { bio, avatar } = req.body;
+  const { bio, avatar, bannerColor } = req.body;
 
   const updated = await userService.updateUser(id, {
     bio,
     avatar,
+    bannerColor,
   });
 
   if (!updated) {
-    return res.status(404).json({
-      message: 'User not found',
-    });
+    throw new NotFoundError('User not found');
   }
 
   return res.status(200).json(updated);

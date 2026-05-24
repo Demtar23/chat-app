@@ -5,4 +5,5 @@ export type UserProfile = {
   avatar?: string | null;
   lastSeen?: string | null;
   createdAt?: string;
+  bannerColor?: string | null;
 };

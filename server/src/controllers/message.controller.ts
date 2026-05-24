@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { messagesService } from '../services/message.service';
+import { NotFoundError, ValidationError } from '../errors/AppError';
 
 async function getGlobalMessages(req: Request, res: Response) {
   const page = Number(req.query.page) || 1;
@@ -36,7 +37,7 @@ async function reactToMessage(req: Request, res: Response) {
   const { id: userId } = req.user!;
 
   if (!emoji) {
-    return res.status(400).json({ message: 'Emoji is required' });
+    throw new ValidationError('Emoji is required');
   }
 
   const message = await messagesService.toggleReaction(
@@ -46,7 +47,7 @@ async function reactToMessage(req: Request, res: Response) {
   );
 
   if (!message) {
-    return res.status(404).json({ message: 'Message not found' });
+    throw new NotFoundError('Message not found');
   }
 
   return res.status(200).json(message);
@@ -58,7 +59,7 @@ async function editMessage(req: Request, res: Response) {
   const { id: userId } = req.user!;
 
   if (!text?.trim()) {
-    return res.status(400).json({ message: 'Text is required' });
+    throw new ValidationError('Text is required');
   }
 
   const message = await messagesService.editMessage(
@@ -68,9 +69,7 @@ async function editMessage(req: Request, res: Response) {
   );
 
   if (!message) {
-    return res
-      .status(404)
-      .json({ message: 'Message not found or not authorized' });
+    throw new NotFoundError('Message not found or not authorized');
   }
 
   return res.status(200).json(message);
@@ -83,9 +82,7 @@ async function deleteMessageForAll(req: Request, res: Response) {
   const message = await messagesService.deleteMessageForAll(messageId, userId);
 
   if (!message) {
-    return res
-      .status(404)
-      .json({ message: 'Message not found or not authorized' });
+    throw new NotFoundError('Message not found or not authorized');
   }
 
   return res.status(200).json(message);
@@ -98,7 +95,7 @@ async function deleteMessageForMe(req: Request, res: Response) {
   const message = await messagesService.deleteMessageForMe(messageId, userId);
 
   if (!message) {
-    return res.status(404).json({ message: 'Message not found' });
+    throw new NotFoundError('Message not found');
   }
 
   return res.status(200).json(message);
@@ -109,7 +106,7 @@ async function pinMessage(req: Request, res: Response) {
   const message = await messagesService.pinMessage(messageId);
 
   if (!message) {
-    return res.status(404).json({ message: 'Message not found' });
+    throw new NotFoundError('Message not found');
   }
 
   return res.status(200).json(message);
@@ -121,7 +118,7 @@ async function unpinMessage(req: Request, res: Response) {
   const message = await messagesService.unpinMessage(messageId);
 
   if (!message) {
-    return res.status(404).json({ message: 'Message not found' });
+    throw new NotFoundError('Message not found');
   }
 
   return res.status(200).json(message);

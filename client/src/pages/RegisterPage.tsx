@@ -2,27 +2,46 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { apiRegister } from '../api/auth.api';
 import { useAuth } from '../context/AuthContext';
+import { notify } from '../utils/toast';
+import { useFormField } from '../hooks/useFormField';
+import { registerSchema } from '../validations/auth.schema';
+
+function inputClass(error: string) {
+  return `bg-[#1e1f22] text-white text-sm px-3 py-2.5 rounded-md outline-none border transition-colors placeholder-gray-600 ${
+    error
+      ? 'border-red-500 focus:border-red-400'
+      : 'border-transparent focus:border-[#5865f2]'
+  }`;
+}
 
 export function RegisterPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
-
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  const username = useFormField(registerSchema.shape.username);
+  const password = useFormField(registerSchema.shape.password);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError('');
-    setIsLoading(true);
 
+    const isUsernameValid = username.validateNow();
+    const isPasswordValid = password.validateNow();
+    if (!isUsernameValid || !isPasswordValid) return;
+
+    setIsLoading(true);
     try {
-      const { user, accessToken } = await apiRegister(username, password);
+      const { user, accessToken } = await apiRegister(
+        username.value,
+        password.value,
+      );
       login(user, accessToken);
       navigate('/chat');
+      notify.success('Profile created successfully');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      notify.error(
+        err instanceof Error ? err.message : 'Не вдалося зареєструватись',
+      );
     } finally {
       setIsLoading(false);
     }
@@ -44,12 +63,16 @@ export function RegisterPage() {
               USERNAME
             </label>
             <input
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="bg-[#1e1f22] text-white text-sm px-3 py-2.5 rounded-md outline-none border border-transparent focus:border-[#5865f2] placeholder-gray-600"
-              placeholder="Введи username"
+              value={username.value}
+              onChange={username.onChange}
+              onBlur={username.onBlur}
+              className={inputClass(username.error)}
+              placeholder="3-20 символів, тільки літери, цифри, _ та -"
               autoComplete="username"
             />
+            {username.error && (
+              <p className="text-red-400 text-xs mt-0.5">{username.error}</p>
+            )}
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -58,22 +81,24 @@ export function RegisterPage() {
             </label>
             <input
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="bg-[#1e1f22] text-white text-sm px-3 py-2.5 rounded-md outline-none border border-transparent focus:border-[#5865f2] placeholder-gray-600"
-              placeholder="Введи пароль"
+              value={password.value}
+              onChange={password.onChange}
+              onBlur={password.onBlur}
+              className={inputClass(password.error)}
+              placeholder="Мін. 8 символів, велика/мала літера, цифра, спецсимвол"
               autoComplete="new-password"
             />
+            {password.error && (
+              <p className="text-red-400 text-xs mt-0.5">{password.error}</p>
+            )}
           </div>
-
-          {error && <p className="text-red-400 text-sm">{error}</p>}
 
           <button
             type="submit"
             disabled={isLoading}
             className="bg-[#5865f2] hover:bg-[#4752c4] disabled:opacity-50 text-white text-sm font-medium py-2.5 rounded-md transition-colors mt-1"
           >
-            {isLoading ? 'Loading...' : 'Зареєструватись'}
+            {isLoading ? 'Завантаження...' : 'Зареєструватись'}
           </button>
         </form>
 

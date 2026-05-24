@@ -4,6 +4,7 @@ import type { Room } from '../../../types/room';
 import type { ActiveChat } from '../../../types/chat';
 import type { OnlineUser } from '../../../types/socket';
 import type { UserProfile } from '../../../types/user';
+import { Avatar } from './Avatar';
 
 type Props = {
   isDark: boolean;
@@ -56,14 +57,6 @@ export function Sidebar({
     (u) => u._id !== currentUserId && !onlineUserIds.has(u._id),
   );
 
-  const COLORS = [
-    { bg: 'bg-purple-100', text: 'text-purple-800' },
-    { bg: 'bg-teal-100', text: 'text-teal-800' },
-    { bg: 'bg-orange-100', text: 'text-orange-800' },
-    { bg: 'bg-blue-100', text: 'text-blue-800' },
-    { bg: 'bg-pink-100', text: 'text-pink-800' },
-  ];
-
   return (
     <div
       className={`w-52 border-r flex flex-col flex-shrink-0 transition-colors duration-200 ${bg} ${border}`}
@@ -82,7 +75,7 @@ export function Sidebar({
       </div>
 
       <div className="flex-1 overflow-y-auto py-2 flex flex-col gap-2">
-        {/* Rooms секція */}
+        {/* Rooms */}
         <div>
           <div className="flex items-center justify-between px-3 mb-1">
             <button
@@ -133,7 +126,7 @@ export function Sidebar({
           )}
         </div>
 
-        {/* Direct Messages секція */}
+        {/* Direct Messages */}
         <div>
           <div className="px-3 mb-1">
             <button
@@ -147,7 +140,7 @@ export function Sidebar({
 
           {openSections.direct && (
             <div className="flex flex-col gap-1">
-              {/* Online секція */}
+              {/* Online */}
               <div>
                 <button
                   onClick={() => toggleSection('online')}
@@ -161,36 +154,44 @@ export function Sidebar({
                 {openSections.online &&
                   onlineUsers
                     .filter((u) => u.userId !== currentUserId)
-                    .map((user, index) => {
-                      const color = COLORS[index % COLORS.length];
+                    .map((onlineUser) => {
+                      const fullUser = allUsers.find(
+                        (u) => u._id === onlineUser.userId,
+                      );
                       return (
                         <button
-                          key={user.userId}
+                          key={onlineUser.userId}
                           onClick={() =>
-                            onSelectPrivate(user.userId, user.userName)
+                            onSelectPrivate(
+                              onlineUser.userId,
+                              onlineUser.userName,
+                            )
                           }
                           className={`flex items-center gap-2 px-3 py-1.5 w-full transition-colors ${
                             activeChat.type === 'private' &&
-                            activeChat.userId === user.userId
+                            activeChat.userId === onlineUser.userId
                               ? activeItem
                               : hoverItem
                           }`}
                         >
-                          <div
-                            className={`relative w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-medium flex-shrink-0 ${color.bg} ${color.text}`}
-                          >
-                            {user.userName.slice(0, 2).toUpperCase()}
+                          <div className="relative flex-shrink-0">
+                            <Avatar
+                              username={onlineUser.userName}
+                              avatar={fullUser?.avatar}
+                              size="xs"
+                              isDark={isDark}
+                            />
                             <span className="absolute bottom-0 right-0 w-1.5 h-1.5 rounded-full bg-green-500 border border-[#2b2d31]" />
                           </div>
-                          <span className={`text-sm ${textPrimary}`}>
-                            {user.userName}
+                          <span className={`text-sm truncate ${textPrimary}`}>
+                            {onlineUser.userName}
                           </span>
                         </button>
                       );
                     })}
               </div>
 
-              {/* Offline секція */}
+              {/* Offline */}
               {offlineUsers.length > 0 && (
                 <div className={`border-t ${border} pt-1`}>
                   <button
@@ -213,11 +214,16 @@ export function Sidebar({
                             : hoverItem
                         }`}
                       >
-                        <div className="relative w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center text-[9px] font-medium flex-shrink-0 text-gray-400">
-                          {user.username.slice(0, 2).toUpperCase()}
+                        <div className="relative flex-shrink-0">
+                          <Avatar
+                            username={user.username}
+                            avatar={user.avatar}
+                            size="xs"
+                            isDark={isDark}
+                          />
                           <span className="absolute bottom-0 right-0 w-1.5 h-1.5 rounded-full bg-gray-500 border border-[#2b2d31]" />
                         </div>
-                        <span className={`text-sm ${textMuted}`}>
+                        <span className={`text-sm truncate ${textMuted}`}>
                           {user.username}
                         </span>
                       </button>

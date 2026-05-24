@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { apiRefresh, apiLogout } from '../api/auth.api';
 import { connectSocket, disconnectSocket } from '../services/socket';
+import { setTokenRefreshCallback } from '../api/fetchWithAuth';
 
 type User = {
   id: string;
@@ -13,6 +14,7 @@ type AuthContextType = {
   isLoading: boolean;
   login: (user: User, token: string) => void;
   logout: () => Promise<void>;
+  refreshToken: () => Promise<string | null>;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -22,12 +24,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // ref щоб уникнути кількох одночасних refresh запитів
+  const refreshPromiseRef = useRef<Promise<string | null> | null>(null);
+
   useEffect(() => {
     apiRefresh()
       .then(({ user, accessToken }) => {
         setUser(user);
         setAccessToken(accessToken);
         connectSocket(accessToken);
+        setTokenRefreshCallback((newToken) => {
+          setAccessToken(newToken);
+          connectSocket(newToken);
+        });
       })
       .catch((err) => {
         console.log('Refresh failed:', err.message);
@@ -50,9 +59,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     disconnectSocket();
   }
 
+  async function refreshToken(): Promise<string | null> {
+    // якщо вже йде refresh — чекаємо його замість нового запиту
+    if (refreshPromiseRef.current) {
+      return refreshPromiseRef.current;
+    }
+
+    refreshPromiseRef.current = apiRefresh()
+      .then(({ accessToken: newToken, user: newUser }) => {
+        setAccessToken(newToken);
+        setUser(newUser);
+        connectSocket(newToken);
+        return newToken;
+      })
+      .catch(() => {
+        // refresh провалився — логаут
+        setUser(null);
+        setAccessToken(null);
+        disconnectSocket();
+        return null;
+      })
+      .finally(() => {
+        refreshPromiseRef.current = null;
+      });
+
+    return refreshPromiseRef.current;
+  }
+
   return (
     <AuthContext.Provider
-      value={{ user, accessToken, isLoading, login, logout }}
+      value={{ user, accessToken, isLoading, login, logout, refreshToken }}
     >
       {children}
     </AuthContext.Provider>
@@ -62,10 +98,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 // eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const context = useContext(AuthContext);
-
   if (!context) {
     throw new Error('useAuth must be used within AuthProvider');
   }
-
   return context;
 }
