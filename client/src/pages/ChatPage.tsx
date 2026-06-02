@@ -6,6 +6,8 @@ import {
   fetchRoomMessages,
   fetchPrivateMessages,
   fetchPinnedMessages,
+  searchMessages,
+  fetchMessagesAround,
 } from '../api/messages.api';
 import { TopBar } from '../components/Chat/components/TopBar';
 import { Sidebar } from '../components/Chat/components/Sidebar';
@@ -27,6 +29,7 @@ import { AppLoader } from '../components/AppLoader';
 import { UserHoverCard } from '../components/Chat/components/UserHoverCard';
 import { ProfileModal } from '../components/Chat/components/ProfileModal';
 import { notify } from '../utils/toast';
+import { SearchResults } from '../components/Chat/components/SearchResults';
 
 function getActiveChatKey(c: ActiveChat): string {
   if (c.type === 'global') return 'global';
@@ -66,6 +69,16 @@ export function ChatPage() {
     useState<UserProfile | null>(null);
 
   const [myProfile, setMyProfile] = useState<UserProfile | null>(null);
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<Message[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  // const loadMoreLockRef = useRef(false);
+  const isNavigatingRef = useRef(false);
 
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -162,6 +175,8 @@ export function ChatPage() {
       setTypingUsers([]);
       setReplyTo(null);
       setPinnedMessages([]);
+      handleSearchClose();
+      setHasMore(true);
 
       try {
         if (activeChat.type === 'global') {
@@ -565,12 +580,77 @@ export function ChatPage() {
     socket?.emit('message:unpin', { messageId });
   }
 
-  function scrollToMessage(messageId: string) {
+  async function scrollToMessage(messageId: string) {
+    console.log('SCROLL TO MESSAGE');
+
+    handleSearchClose();
+
     const element = document.getElementById(`message-${messageId}`);
-    if (!element) return;
-    element.scrollIntoView({ behavior: 'smooth', block: 'center' }); // було center
-    setHighlightedId(messageId);
-    setTimeout(() => setHighlightedId(null), 1500);
+    if (element) {
+      isNavigatingRef.current = true;
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setHighlightedId(messageId);
+      setTimeout(() => {
+        setHighlightedId(null);
+        isNavigatingRef.current = false;
+      }, 1500);
+      return;
+    }
+
+    if (!accessToken) {
+
+      return;
+    }
+
+    try {
+      const around = await fetchMessagesAround(
+        accessToken,
+        messageId,
+        activeChat.type,
+        activeChat.type === 'room' ? activeChat.roomId : undefined,
+        activeChat.type === 'private' ? activeChat.userId : undefined,
+      );
+
+      const uniqueAround = Array.from(
+        new Map(around.map((m) => [m._id, m])).values(),
+      );
+
+      // merge з існуючими — не замінювати повністю
+      setMessages((prev) => {
+        const existingIds = new Set(prev.map((m) => m._id));
+        const newMessages = uniqueAround.filter((m) => !existingIds.has(m._id));
+
+        if (newMessages.length === 0) return prev; // всі вже є
+
+        // об'єднати і відсортувати за часом
+        const merged = [...prev, ...newMessages].sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+        );
+        return merged;
+      });
+
+      setHasMore(true);
+
+      const pinIndex = pinnedMessages.findIndex((m) => m._id === messageId);
+      if (pinIndex !== -1) setActivePinnedIndex(pinIndex);
+
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          const el = document.getElementById(`message-${messageId}`);
+          if (!el) {
+            return;
+          }
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setHighlightedId(messageId);
+          setTimeout(() => {
+            setHighlightedId(null);
+          }, 1500);
+        }, 100);
+      });
+    } catch {
+      notify.error('Не вдалося знайти повідомлення');
+    }
   }
 
   async function handleReact(messageId: string, emoji: string) {
@@ -630,6 +710,84 @@ export function ChatPage() {
       prev?._id === updated._id ? updated : prev,
     );
   }
+
+  async function handleSearch(query: string) {
+    if (!accessToken) return;
+    setIsSearching(true);
+    setSearchQuery(query);
+
+    try {
+      const results = await searchMessages(
+        accessToken,
+        activeChat.type,
+        query,
+        activeChat.type === 'room' ? activeChat.roomId : undefined,
+        activeChat.type === 'private' ? activeChat.userId : undefined,
+      );
+      setSearchResults(results);
+    } catch {
+      notify.error('Помилка пошуку');
+    } finally {
+      setIsSearching(false);
+    }
+  }
+
+  function handleSearchClose() {
+    setSearchQuery('');
+    setSearchResults([]);
+    setIsSearching(false);
+  }
+
+  async function loadMore() {
+    if (!accessToken || isLoadingMore || !hasMore) return;
+
+    console.log('REAL LOAD MORE START', messages[0]?._id);
+    const firstMessage = messages[0];
+    if (!firstMessage) return;
+
+    setIsLoadingMore(true);
+    try {
+      let older: Message[] = [];
+
+      if (activeChat.type === 'global') {
+        older = await fetchGlobalMessages(accessToken, firstMessage._id);
+      } else if (activeChat.type === 'room') {
+        older = await fetchRoomMessages(
+          accessToken,
+          activeChat.roomId,
+          firstMessage._id,
+        );
+      } else if (activeChat.type === 'private') {
+        older = await fetchPrivateMessages(
+          accessToken,
+          activeChat.userId,
+          firstMessage._id,
+        );
+      }
+
+      if (older.length === 0) {
+        setHasMore(false);
+        return;
+      }
+
+      if (older.length < 30) setHasMore(false);
+
+      setMessages((prev) => {
+        const existingIds = new Set(prev.map((m) => m._id));
+        const unique = older.filter((m) => !existingIds.has(m._id));
+        // сортуємо весь список після merge
+        return [...unique, ...prev].sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+        );
+      });
+    } catch {
+      notify.error('Не вдалося завантажити повідомлення');
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }
+
   if (!accessToken || !user) {
     return null;
   }
@@ -645,6 +803,10 @@ export function ChatPage() {
         onToggleTheme={() => setIsDark(!isDark)}
         onOpenMyProfile={handleOpenMyProfile}
         myProfile={myProfile ?? undefined}
+        onSearch={handleSearch}
+        onSearchClose={handleSearchClose}
+        query={searchQuery}
+        onQueryChange={setSearchQuery}
       />
       <div className="flex flex-1 overflow-hidden min-h-0">
         <Sidebar
@@ -662,10 +824,7 @@ export function ChatPage() {
           onCreateRoom={() => setShowCreateRoom(true)}
           isRoomsLoading={isRoomsLoading}
         />
-        <div
-          key={getActiveChatKey(activeChat)}
-          className="chat-main-panel relative flex flex-col flex-1 overflow-hidden min-h-0"
-        >
+        <div className="chat-main-panel relative flex flex-col flex-1 overflow-hidden min-h-0">
           {isSocketDisconnected && (
             <AppLoader
               variant="overlay"
@@ -686,9 +845,21 @@ export function ChatPage() {
               />
             )
           )}
+
+          {searchQuery.length >= 2 && (
+            <SearchResults
+              results={searchResults}
+              query={searchQuery}
+              isSearching={isSearching}
+              isDark={isDark}
+              onResultClick={scrollToMessage}
+              onClose={handleSearchClose}
+            />
+          )}
           <MessageList
             messages={messages}
             isDark={isDark}
+            activeChat={activeChat}
             currentUserId={user.id}
             onReact={handleReact}
             onEdit={handleEdit}
@@ -716,6 +887,11 @@ export function ChatPage() {
               }, 150);
             }}
             onOpenProfile={openProfile}
+            hasMore={hasMore}
+            isLoadingMore={isLoadingMore}
+            onLoadMore={loadMore}
+            chatKey={getActiveChatKey(activeChat)}
+            isNavigatingRef={isNavigatingRef}
           />
           <TypingIndicator typingUsers={typingUsers} isDark={isDark} />
 

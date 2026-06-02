@@ -211,6 +211,125 @@ async function getPinnedMessages(filter: {
   return Message.find(query).sort({ createdAt: 1 });
 }
 
+function escapeRegex(str: string) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+async function searchMessages(filter: {
+  type: 'global' | 'room' | 'private';
+  query: string;
+  roomId?: string;
+  senderId?: string;
+  receiverId?: string;
+  limit?: number;
+}) {
+  const query: Record<string, unknown> = {
+    type: filter.type,
+    isDeleted: false,
+    text: {
+      $regex: escapeRegex(filter.query),
+      $options: 'i',
+    },
+  };
+
+  if (filter.type === 'room') {
+    query.roomId = filter.roomId;
+  } else if (filter.type === 'private') {
+    query.$or = [
+      { senderId: filter.senderId, receiverId: filter.receiverId },
+      { senderId: filter.receiverId, receiverId: filter.senderId },
+    ];
+  }
+
+  return Message.find(query)
+    .sort({ createdAt: -1 })
+    .limit(filter.limit ?? 20);
+}
+
+async function getGlobalMessagesBefore(beforeId?: string, limit = 30) {
+  const query: Record<string, unknown> = { type: 'global' };
+  if (beforeId) {
+    query._id = { $lt: beforeId };
+  }
+  return Message.find(query)
+    .sort({ _id: -1 })
+    .limit(limit)
+    .then((msgs) => msgs.reverse());
+}
+
+async function getRoomMessagesBefore(
+  roomId: string,
+  beforeId?: string,
+  limit = 30,
+) {
+  const query: Record<string, unknown> = { type: 'room', roomId };
+  if (beforeId) {
+    query._id = { $lt: beforeId };
+  }
+  return Message.find(query)
+    .sort({ _id: -1 })
+    .limit(limit)
+    .then((msgs) => msgs.reverse());
+}
+
+async function getPrivateMessagesBefore(
+  senderId: string,
+  receiverId: string,
+  beforeId?: string,
+  limit = 30,
+) {
+  const query: Record<string, unknown> = {
+    type: 'private',
+    $or: [
+      { senderId, receiverId },
+      { senderId: receiverId, receiverId: senderId },
+    ],
+  };
+  if (beforeId) {
+    query._id = { $lt: beforeId };
+  }
+  return Message.find(query)
+    .sort({ _id: -1 })
+    .limit(limit)
+    .then((msgs) => msgs.reverse());
+}
+
+async function getMessagesAround(
+  messageId: string,
+  filter: {
+    type: 'global' | 'room' | 'private';
+    roomId?: string;
+    senderId?: string;
+    receiverId?: string;
+  },
+  limit = 30,
+) {
+  const half = Math.floor(limit / 2);
+  const baseQuery: Record<string, unknown> = { type: filter.type };
+
+  if (filter.type === 'room') {
+    baseQuery.roomId = filter.roomId;
+  } else if (filter.type === 'private') {
+    baseQuery.$or = [
+      { senderId: filter.senderId, receiverId: filter.receiverId },
+      { senderId: filter.receiverId, receiverId: filter.senderId },
+    ];
+  }
+
+  const [before, target, after] = await Promise.all([
+    Message.find({ ...baseQuery, _id: { $lt: messageId } })
+      .sort({ _id: -1 })
+      .limit(half)
+      .then((msgs) => msgs.reverse()),
+    Message.findById(messageId),
+    Message.find({ ...baseQuery, _id: { $gt: messageId } })
+      .sort({ _id: 1 })
+      .limit(half),
+  ]);
+
+  return [...before, ...(target ? [target] : []), ...after];
+}
+
 export const messagesService = {
   createMessage,
   getAllMessages,
@@ -227,4 +346,9 @@ export const messagesService = {
   pinMessage,
   unpinMessage,
   getPinnedMessages,
+  searchMessages,
+  getGlobalMessagesBefore,
+  getRoomMessagesBefore,
+  getPrivateMessagesBefore,
+  getMessagesAround,
 };

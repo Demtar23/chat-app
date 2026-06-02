@@ -3,56 +3,75 @@ import { fetchWithAuth } from './fetchWithAuth';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+// cursor-based — beforeId = _id найстарішого повідомлення в списку
 export async function fetchGlobalMessages(
   token: string,
-  page = 1,
+  beforeId?: string,
 ): Promise<Message[]> {
+  const params = new URLSearchParams();
+  if (beforeId) params.append('before', beforeId);
+
   const res = await fetchWithAuth(
-    `${API_URL}/messages/global?page=${page}`,
+    `${API_URL}/messages/global?${params}`,
     {},
     token,
   );
-
-  if (!res.ok) {
-    throw new Error('Failed to fetch messages');
-  }
-
+  if (!res.ok) throw new Error('Failed to fetch messages');
   return res.json();
 }
 
 export async function fetchRoomMessages(
   token: string,
   roomId: string,
-  page = 1,
+  beforeId?: string,
 ): Promise<Message[]> {
+  const params = new URLSearchParams();
+  if (beforeId) params.append('before', beforeId);
+
   const res = await fetchWithAuth(
-    `${API_URL}/messages/room/${roomId}?page=${page}`,
+    `${API_URL}/messages/room/${roomId}?${params}`,
     {},
     token,
   );
-
-  if (!res.ok) {
-    throw new Error('Failed to fetch room messages');
-  }
-
+  if (!res.ok) throw new Error('Failed to fetch room messages');
   return res.json();
 }
 
 export async function fetchPrivateMessages(
   token: string,
   userId: string,
-  page = 1,
+  beforeId?: string,
 ): Promise<Message[]> {
+  const params = new URLSearchParams();
+  if (beforeId) params.append('before', beforeId);
+
   const res = await fetchWithAuth(
-    `${API_URL}/messages/private/${userId}?page=${page}`,
+    `${API_URL}/messages/private/${userId}?${params}`,
     {},
     token,
   );
+  if (!res.ok) throw new Error('Failed to fetch private messages');
+  return res.json();
+}
 
-  if (!res.ok) {
-    throw new Error('Failed to fetch private messages');
-  }
+// завантажити повідомлення навколо конкретного (для pin/search навігації)
+export async function fetchMessagesAround(
+  token: string,
+  messageId: string,
+  type: 'global' | 'room' | 'private',
+  roomId?: string,
+  userId?: string,
+): Promise<Message[]> {
+  const params = new URLSearchParams({ type });
+  if (roomId) params.append('roomId', roomId);
+  if (userId) params.append('userId', userId);
 
+  const res = await fetchWithAuth(
+    `${API_URL}/messages/around/${messageId}?${params}`,
+    {},
+    token,
+  );
+  if (!res.ok) throw new Error('Failed to fetch messages around');
   return res.json();
 }
 
@@ -63,17 +82,10 @@ export async function toggleReaction(
 ): Promise<Message> {
   const res = await fetchWithAuth(
     `${API_URL}/messages/${messageId}/react`,
-    {
-      method: 'POST',
-      body: JSON.stringify({ emoji }),
-    },
+    { method: 'POST', body: JSON.stringify({ emoji }) },
     token,
   );
-
-  if (!res.ok) {
-    throw new Error('Failed to toggle reaction');
-  }
-
+  if (!res.ok) throw new Error('Failed to toggle reaction');
   return res.json();
 }
 
@@ -84,13 +96,9 @@ export async function editMessage(
 ): Promise<Message> {
   const res = await fetchWithAuth(
     `${API_URL}/messages/${messageId}`,
-    {
-      method: 'PATCH',
-      body: JSON.stringify({ text }),
-    },
+    { method: 'PATCH', body: JSON.stringify({ text }) },
     token,
   );
-
   if (!res.ok) throw new Error('Failed to edit message');
   return res.json();
 }
@@ -101,12 +109,9 @@ export async function deleteMessageForAll(
 ): Promise<Message> {
   const res = await fetchWithAuth(
     `${API_URL}/messages/${messageId}`,
-    {
-      method: 'DELETE',
-    },
+    { method: 'DELETE' },
     token,
   );
-
   if (!res.ok) throw new Error('Failed to delete message');
   return res.json();
 }
@@ -117,12 +122,9 @@ export async function deleteMessageForMe(
 ): Promise<Message> {
   const res = await fetchWithAuth(
     `${API_URL}/messages/${messageId}/me`,
-    {
-      method: 'DELETE',
-    },
+    { method: 'DELETE' },
     token,
   );
-
   if (!res.ok) throw new Error('Failed to delete message');
   return res.json();
 }
@@ -142,7 +144,26 @@ export async function fetchPinnedMessages(
     {},
     token,
   );
-
   if (!res.ok) throw new Error('Failed to fetch pinned messages');
+  return res.json();
+}
+
+export async function searchMessages(
+  token: string,
+  type: 'global' | 'room' | 'private',
+  query: string,
+  roomId?: string,
+  userId?: string,
+): Promise<Message[]> {
+  const params = new URLSearchParams({ q: query, type });
+  if (roomId) params.append('roomId', roomId);
+  if (userId) params.append('userId', userId);
+
+  const res = await fetchWithAuth(
+    `${API_URL}/messages/search?${params}`,
+    {},
+    token,
+  );
+  if (!res.ok) throw new Error('Failed to search messages');
   return res.json();
 }

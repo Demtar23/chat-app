@@ -5,29 +5,40 @@ import { authMiddleware } from '../middlewares/auth.middleware';
 
 export const messageRouter = Router();
 
-// спочатку статичні роути
 messageRouter.get(
   '/global',
   authMiddleware,
-  catchError(messagesController.getGlobalMessages),
+  catchError(messagesController.getGlobalMessagesCursor),
 );
 
 messageRouter.get(
   '/room/:roomId',
   authMiddleware,
-  catchError(messagesController.getRoomMessages),
+  catchError(messagesController.getRoomMessagesCursor),
 );
 
 messageRouter.get(
   '/private/:userId',
   authMiddleware,
-  catchError(messagesController.getPrivateMessages),
+  catchError(messagesController.getPrivateMessagesCursor),
 );
 
 messageRouter.get(
   '/pinned',
   authMiddleware,
   catchError(messagesController.getPinnedMessages),
+);
+
+messageRouter.get(
+  '/search',
+  authMiddleware,
+  catchError(messagesController.searchMessages),
+);
+
+messageRouter.get(
+  '/around/:messageId',
+  authMiddleware,
+  catchError(messagesController.getMessagesAround),
 );
 
 messageRouter.post(

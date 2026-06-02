@@ -138,6 +138,80 @@ async function getPinnedMessages(req: Request, res: Response) {
   return res.status(200).json(messages);
 }
 
+async function searchMessages(req: Request, res: Response) {
+  const { q, type, roomId, userId } = req.query;
+  const { id: currentUserId } = req.user!;
+
+  if (!q || typeof q !== 'string' || !q.trim()) {
+    throw new ValidationError('Search query is required');
+  }
+
+  if (!type || !['global', 'room', 'private'].includes(type as string)) {
+    throw new ValidationError('Invalid chat type');
+  }
+
+  const messages = await messagesService.searchMessages({
+    type: type as 'global' | 'room' | 'private',
+    query: q.trim(),
+    roomId: roomId as string | undefined,
+    senderId: currentUserId,
+    receiverId: userId as string | undefined,
+  });
+
+  return res.status(200).json(messages);
+}
+
+async function getGlobalMessagesCursor(req: Request, res: Response) {
+  const beforeId = req.query.before as string | undefined;
+  const messages = await messagesService.getGlobalMessagesBefore(beforeId);
+  return res.status(200).json(messages);
+}
+
+async function getRoomMessagesCursor(req: Request, res: Response) {
+  const roomId = req.params.roomId as string;
+  const beforeId = req.query.before as string | undefined;
+  const messages = await messagesService.getRoomMessagesBefore(
+    roomId,
+    beforeId,
+  );
+  return res.status(200).json(messages);
+}
+
+async function getPrivateMessagesCursor(req: Request, res: Response) {
+  const userId = req.params.userId as string;
+  const { id: currentUserId } = req.user!;
+  const beforeId = req.query.before as string | undefined;
+  const messages = await messagesService.getPrivateMessagesBefore(
+    currentUserId,
+    userId,
+    beforeId,
+  );
+  return res.status(200).json(messages);
+}
+
+async function getMessagesAround(req: Request, res: Response) {
+  const { messageId } = req.params;
+  const { type, roomId, userId } = req.query;
+  const { id: currentUserId } = req.user!;
+
+  if (typeof messageId !== 'string') {
+    throw new ValidationError('Invalid message id');
+  } //тимчачове рішення
+
+  if (!type || !['global', 'room', 'private'].includes(type as string)) {
+    throw new ValidationError('Invalid chat type');
+  }
+
+  const messages = await messagesService.getMessagesAround(messageId, {
+    type: type as 'global' | 'room' | 'private',
+    roomId: roomId as string | undefined,
+    senderId: currentUserId,
+    receiverId: userId as string | undefined,
+  });
+
+  return res.status(200).json(messages);
+}
+
 export const messagesController = {
   getGlobalMessages,
   getRoomMessages,
@@ -149,4 +223,9 @@ export const messagesController = {
   pinMessage,
   unpinMessage,
   getPinnedMessages,
+  searchMessages,
+  getGlobalMessagesCursor,
+  getRoomMessagesCursor,
+  getPrivateMessagesCursor,
+  getMessagesAround,
 };
