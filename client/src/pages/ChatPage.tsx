@@ -426,6 +426,14 @@ export function ChatPage() {
       });
     });
 
+    socket.on('user:new', (newUser: UserProfile) => {
+      setAllUsers((prev) => {
+        const exists = prev.find((u) => u._id === newUser._id);
+        if (exists) return prev;
+        return [...prev, newUser];
+      });
+    });
+
     return () => {
       socket.off('online_users');
       socket.off('room:created');
@@ -442,6 +450,7 @@ export function ChatPage() {
       socket.off('message:unpinned');
       socket.off('user:updated');
       socket.off('online_users:request');
+      socket.off('user:new');
     };
   }, [accessToken, activeChat, user?.id, clearSendingFallback]);
 
@@ -598,7 +607,6 @@ export function ChatPage() {
     }
 
     if (!accessToken) {
-
       return;
     }
 

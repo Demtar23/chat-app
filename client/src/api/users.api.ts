@@ -43,3 +43,41 @@ export async function updateMe(
   if (!res.ok) throw new Error('Failed to update profile');
   return res.json();
 }
+
+export async function uploadAvatar(
+  file: File,
+  token: string,
+): Promise<{ avatar: string }> {
+  const formData = new FormData();
+  formData.append('avatar', file);
+
+  const res = await fetchWithAuth(
+    `${API_URL}/user/me/avatar`,
+    {
+      method: 'POST',
+      body: formData,
+      // не додаємо Content-Type — браузер сам додасть multipart/form-data з boundary
+    },
+    token,
+  );
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message ?? 'Upload failed');
+  }
+
+  return res.json();
+}
+
+export async function deleteAvatarApi(token: string): Promise<void> {
+  const res = await fetchWithAuth(
+    `${API_URL}/user/me/avatar`,
+    { method: 'DELETE' },
+    token,
+  );
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message ?? 'Delete failed');
+  }
+}

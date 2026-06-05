@@ -50,6 +50,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(user);
     setAccessToken(token);
     connectSocket(token);
+    setTokenRefreshCallback((newToken) => {
+      setAccessToken(newToken);
+      connectSocket(newToken);
+    });
   }
 
   async function logout() {

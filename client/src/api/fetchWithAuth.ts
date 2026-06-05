@@ -18,20 +18,19 @@ export async function fetchWithAuth(
   options: RequestInit = {},
   token: string,
 ): Promise<Response> {
+  const isFormData = options.body instanceof FormData;
+
   const headers: Record<string, string> = {
     ...(options.headers as Record<string, string>),
     Authorization: `Bearer ${token}`,
   };
 
-  // автоматично додаємо Content-Type якщо є body
-  if (options.body) {
+  // не додаємо Content-Type для FormData — браузер сам додасть з boundary
+  if (options.body && !isFormData) {
     headers['Content-Type'] = 'application/json';
   }
 
-  const res = await fetch(url, {
-    ...options,
-    headers,
-  });
+  const res = await fetch(url, { ...options, headers });
 
   if (res.status !== 401) return res;
 
@@ -43,7 +42,6 @@ export async function fetchWithAuth(
       pendingRequests.forEach((resolve) => resolve(newToken));
       pendingRequests = [];
 
-      // повторяємо з новим токеном
       return fetch(url, {
         ...options,
         headers: {

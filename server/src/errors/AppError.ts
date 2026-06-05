@@ -5,7 +5,8 @@ export type ErrorCode =
   | 'UNAUTHORIZED'
   | 'FORBIDDEN'
   | 'CONFLICT'
-  | 'TOKEN_EXPIRED';
+  | 'TOKEN_EXPIRED'
+  | 'FILE_TOO_LARGE';
 
 const STATUS_MAP: Record<ErrorCode, number> = {
   INTERNAL_ERROR: 500,
@@ -15,6 +16,7 @@ const STATUS_MAP: Record<ErrorCode, number> = {
   FORBIDDEN: 403,
   CONFLICT: 409,
   TOKEN_EXPIRED: 401,
+  FILE_TOO_LARGE: 400,
 };
 
 export class AppError extends Error {
@@ -62,5 +64,12 @@ export class ConflictError extends AppError {
   constructor(message = 'Conflict') {
     super(message, 'CONFLICT');
     this.name = 'ConflictError';
+  }
+}
+
+export class FileTooLargeError extends AppError {
+  constructor(message = 'File is too large') {
+    super(message, 'FILE_TOO_LARGE');
+    this.name = 'FileTooLargeError';
   }
 }

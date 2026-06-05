@@ -7,6 +7,7 @@ import { authRouter } from './routes/authRouter';
 import { userRouter } from './routes/userRouter';
 import { messageRouter } from './routes/messageRouter';
 import { roomRouter } from './routes/roomRouter';
+import passport from './config/passport';
 
 export const app = express();
 
@@ -21,7 +22,9 @@ app.use(express.json());
 
 app.use(cookieParser());
 
-app.use('/api', authRouter);
+app.use(passport.initialize());
+
+app.use('/api/auth', authRouter);
 
 app.use('/api/user', userRouter);
 

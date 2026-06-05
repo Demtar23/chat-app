@@ -39,5 +39,5 @@ export function useFormField(schema?: ZodSchema) {
     setTouched(false);
   }
 
-  return { value, error, onChange, onBlur, validateNow, reset };
+  return { value, error, setError, onChange, onBlur, validateNow, reset };
 }

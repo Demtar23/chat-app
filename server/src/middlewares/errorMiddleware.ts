@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { AppError } from '../errors/AppError';
+import multer from 'multer';
 
 export function errorMiddleware(
   error: Error,
@@ -43,6 +44,20 @@ export function errorMiddleware(
     return res.status(401).json({
       message: 'Token expired',
       code: 'TOKEN_EXPIRED',
+    });
+  }
+
+  if (error instanceof multer.MulterError) {
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({
+        message: 'File is too large. Maximum size is 5 MB',
+        code: 'FILE_TOO_LARGE',
+      });
+    }
+
+    return res.status(400).json({
+      message: error.message,
+      code: 'VALIDATION_ERROR',
     });
   }
 
