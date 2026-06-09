@@ -38,14 +38,6 @@ async function updateMe(req: Request, res: Response) {
   const { id } = req.user!;
   const { bio, avatar, bannerColor } = req.body;
 
-  if (avatar !== undefined) {
-    const currentUser = await userService.getUserById(id);
-    const oldAvatar = currentUser?.avatar;
-    if (oldAvatar?.includes('cloudinary.com')) {
-      await deleteAvatar(id);
-    }
-  }
-
   const updated = await userService.updateUser(id, {
     bio,
     avatar,
@@ -64,12 +56,6 @@ async function uploadAvatarHandler(req: Request, res: Response) {
 
   if (!req.file) {
     throw new ValidationError('No file provided');
-  }
-
-  const currentUser = await userService.getUserById(id);
-
-  if (currentUser?.avatar?.includes('cloudinary.com')) {
-    await deleteAvatar(id);
   }
 
   const avatarUrl = await uploadAvatar(req.file.buffer, id);

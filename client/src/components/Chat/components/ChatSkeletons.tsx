@@ -1,17 +1,14 @@
+import { getTheme } from '../../../styles/theme';
+
 type Props = { isDark: boolean };
 
 function pulseLine(isDark: boolean, className: string) {
   return `rounded-md ${isDark ? 'bg-[#3f4147]' : 'bg-gray-200'} animate-pulse ${className}`;
 }
 
-/** Скелетон стрічки повідомлень під час fetch */
 export function MessageThreadSkeleton({ isDark }: Props) {
   return (
-    <div
-      className="flex flex-col gap-3 px-4 py-4 flex-1"
-      aria-busy="true"
-      aria-label="Завантаження повідомлень"
-    >
+    <div className="flex flex-col gap-3 px-4 py-4 flex-1" aria-busy="true">
       {['w-[72%]', 'w-[48%]', 'w-[88%]', 'w-[40%]', 'w-[64%]', 'w-[52%]'].map(
         (widthClass, i) => (
           <div key={i} className="flex gap-3">
@@ -32,14 +29,9 @@ export function MessageThreadSkeleton({ isDark }: Props) {
   );
 }
 
-/** Скелетон списку кімнат у сайдбарі */
 export function RoomsListSkeleton({ isDark }: Props) {
   return (
-    <div
-      className="flex flex-col gap-2 px-3 py-1"
-      aria-busy="true"
-      aria-label="Завантаження кімнат"
-    >
+    <div className="flex flex-col gap-2 px-3 py-1" aria-busy="true">
       {[0, 1, 2, 3].map((i) => (
         <div key={i} className={pulseLine(isDark, 'h-7 w-full')} />
       ))}
@@ -47,17 +39,14 @@ export function RoomsListSkeleton({ isDark }: Props) {
   );
 }
 
-/** Скелетон смуги закріплених повідомлень (висота/верстка як у PinnedMessageBar) */
 export function PinnedMessageBarSkeleton({ isDark }: Props) {
+  const t = getTheme(isDark);
   const bar = isDark ? 'bg-[#3f4147]' : 'bg-gray-200';
-  const border = isDark ? 'border-[#1e1f22]' : 'border-gray-200';
-  const bg = isDark ? 'bg-[#2b2d31]' : 'bg-gray-50';
 
   return (
     <div
-      className={`flex items-center gap-2 px-4 py-2 border-b flex-shrink-0 ${bg} ${border}`}
+      className={`flex items-center gap-2 px-4 py-2 border-b flex-shrink-0 ${t.bgSecondary} ${t.border}`}
       aria-busy="true"
-      aria-label="Завантаження закріплень"
     >
       <div className="flex flex-col gap-0.5 flex-shrink-0">
         {[0, 1, 2].map((i) => (

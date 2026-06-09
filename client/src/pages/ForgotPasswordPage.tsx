@@ -4,23 +4,29 @@ import { apiForgotPassword } from '../api/auth.api';
 import { useFormField } from '../hooks/useFormField';
 import { notify } from '../utils/toast';
 import { forgotPasswordSchema } from '../validations/auth.schema';
+import { useThemeContext } from '../context/ThemeContext';
+import { getAuthPage } from '../styles/authPageClasses';
+import { ThemeToggle } from '../components/Chat/components/ThemeToggle';
+import { useTranslation } from 'react-i18next';
+import { LangToggle } from '../components/LangToggle';
 
 export function ForgotPasswordPage() {
+  const { t } = useTranslation();
+  const { isDark } = useThemeContext();
+  const ap = getAuthPage(isDark);
   const [isLoading, setIsLoading] = useState(false);
   const [isSent, setIsSent] = useState(false);
-
   const email = useFormField(forgotPasswordSchema.shape.email);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!email.validateNow()) return;
-
     setIsLoading(true);
     try {
       await apiForgotPassword(email.value);
       setIsSent(true);
     } catch (err) {
-      notify.error(err instanceof Error ? err.message : 'Щось пішло не так');
+      notify.error(err instanceof Error ? err.message : t('forgotPassword.errorMsg'));
     } finally {
       setIsLoading(false);
     }
@@ -28,17 +34,23 @@ export function ForgotPasswordPage() {
 
   if (isSent) {
     return (
-      <div className="h-screen flex items-center justify-center bg-[#1e1f22]">
-        <div className="bg-[#2b2d31] rounded-lg p-8 w-full max-w-sm border border-[#1e1f22] text-center">
+      <div className={`relative ${ap.page}`}>
+        <div className="absolute top-4 right-4 flex items-center gap-2">
+        <LangToggle />
+        <ThemeToggle />
+      </div>
+        <div className={ap.cardCenter}>
           <div className="text-4xl mb-4">📧</div>
-          <h1 className="text-white text-xl font-medium mb-2">Перевір пошту</h1>
-          <p className="text-gray-400 text-sm mb-6">
-            Якщо акаунт з адресою{' '}
-            <span className="text-white">{email.value}</span> існує, ми
-            надіслали інструкції для скидання пароля.
+          <h1 className={ap.title}>{t('forgotPassword.sentTitle')}</h1>
+          <p className={`${ap.subtitle} mb-6`}>
+            {t('forgotPassword.sentDesc')}{' '}
+            <span className={isDark ? 'text-white' : 'text-gray-900'}>
+              {email.value}
+            </span>{' '}
+            {t('forgotPassword.sentDesc2')}
           </p>
-          <Link to="/login" className="text-[#5865f2] hover:underline text-sm">
-            Повернутись до входу
+          <Link to="/login" className={`text-sm ${ap.link}`}>
+            {t('auth.backToLogin')}
           </Link>
         </div>
       </div>
@@ -46,29 +58,27 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <div className="h-screen flex items-center justify-center bg-[#1e1f22]">
-      <div className="bg-[#2b2d31] rounded-lg p-8 w-full max-w-sm border border-[#1e1f22]">
-        <h1 className="text-white text-xl font-medium mb-1">Забули пароль?</h1>
-        <p className="text-gray-400 text-sm mb-6">
-          Введи свій email і ми надішлемо посилання для скидання пароля.
+    <div className={`relative ${ap.page}`}>
+      <div className="absolute top-4 right-4 flex items-center gap-2">
+        <LangToggle />
+        <ThemeToggle />
+      </div>
+      <div className={ap.card}>
+        <h1 className={ap.title}>{t('forgotPassword.title')}</h1>
+        <p className={ap.subtitle}>
+          {t('forgotPassword.subtitle')}
         </p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-gray-400 tracking-wide">
-              EMAIL
-            </label>
+            <label className={ap.label}>{t('auth.email')}</label>
             <input
               type="email"
               value={email.value}
               onChange={email.onChange}
               onBlur={email.onBlur}
-              className={`bg-[#1e1f22] text-white text-sm px-3 py-2.5 rounded-md outline-none border transition-colors placeholder-gray-600 ${
-                email.error
-                  ? 'border-red-500'
-                  : 'border-transparent focus:border-[#5865f2]'
-              }`}
-              placeholder="your@email.com"
+              className={ap.input(email.error)}
+              placeholder={t('loginPage.emailPlaceholder')}
               autoComplete="email"
             />
             {email.error && (
@@ -76,18 +86,14 @@ export function ForgotPasswordPage() {
             )}
           </div>
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="bg-[#5865f2] hover:bg-[#4752c4] disabled:opacity-50 text-white text-sm font-medium py-2.5 rounded-md transition-colors"
-          >
-            {isLoading ? 'Надсилання...' : 'Надіслати посилання'}
+          <button type="submit" disabled={isLoading} className={ap.submitBtn}>
+            {isLoading ? t('forgotPassword.sending') : t('forgotPassword.submitBtn')}
           </button>
         </form>
 
-        <p className="text-gray-500 text-sm mt-4 text-center">
-          <Link to="/login" className="text-[#5865f2] hover:underline">
-            Повернутись до входу
+        <p className={ap.mutedText}>
+          <Link to="/login" className={ap.link}>
+            {t('auth.backToLogin')}
           </Link>
         </p>
       </div>

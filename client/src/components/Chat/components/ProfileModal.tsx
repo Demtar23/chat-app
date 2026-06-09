@@ -4,6 +4,8 @@ import { EditProfileModal } from './EditProfileModal';
 import type { UserProfile } from '../../../types/user';
 import { formatLastSeen } from '../../../utils/formatLastSeen';
 import { Avatar } from './Avatar';
+import { getTheme } from '../../../styles/theme';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   isDark: boolean;
@@ -24,24 +26,24 @@ export function ProfileModal({
   onStartChat,
   onProfileUpdate,
 }: Props) {
+  const { t, i18n } = useTranslation();
   const { logout } = useAuth();
   const [showEdit, setShowEdit] = useState(false);
+  const theme = getTheme(isDark);
+
+  const COLORS = [
+    { banner: 'bg-purple-200' },
+    { banner: 'bg-teal-200' },
+    { banner: 'bg-orange-200' },
+    { banner: 'bg-blue-200' },
+    { banner: 'bg-pink-200' },
+  ];
+  const color = COLORS[profile.username.charCodeAt(0) % COLORS.length];
 
   async function handleLogout() {
     await logout();
     onClose();
   }
-
-  const COLORS = [
-    { bg: 'bg-purple-100', text: 'text-purple-800', banner: 'bg-purple-200' },
-    { bg: 'bg-teal-100', text: 'text-teal-800', banner: 'bg-teal-200' },
-    { bg: 'bg-orange-100', text: 'text-orange-800', banner: 'bg-orange-200' },
-    { bg: 'bg-blue-100', text: 'text-blue-800', banner: 'bg-blue-200' },
-    { bg: 'bg-pink-100', text: 'text-pink-800', banner: 'bg-pink-200' },
-  ];
-
-  const color = COLORS[profile.username.charCodeAt(0) % COLORS.length];
-  // const border = isDark ? 'border-[#1e1f22]' : 'border-gray-200';
 
   return (
     <>
@@ -50,18 +52,20 @@ export function ProfileModal({
         onClick={onClose}
       >
         <div
-          className={`w-80 rounded-xl shadow-2xl overflow-hidden ${
-            isDark ? 'bg-[#2b2d31]' : 'bg-white'
-          }`}
+          className={`w-80 rounded-xl shadow-2xl overflow-hidden ${theme.bgSecondary}`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Banner */}
           <div
             className="h-20 relative"
-            style={{ backgroundColor: profile.bannerColor ?? color.banner }}
-          />
+            style={{ backgroundColor: profile.bannerColor ?? undefined }}
+          >
+            {!profile.bannerColor && (
+              <div className={`h-full ${color.banner}`} />
+            )}
+          </div>
 
-          {/* Avatar — виступає над банером */}
+          {/* Avatar */}
           <div className="px-4 pb-3">
             <div className="flex items-end justify-between -mt-8 mb-3">
               <div className="relative">
@@ -78,99 +82,86 @@ export function ProfileModal({
                   } ${isOnline ? 'bg-green-500' : 'bg-gray-400'}`}
                 />
               </div>
-
-              {/* Кнопки дій справа */}
             </div>
 
-            {/* Username + статус */}
-            <p
-              className={`font-bold text-base ${isDark ? 'text-white' : 'text-gray-900'}`}
-            >
+            <p className={`font-bold text-base ${theme.textPrimary}`}>
               {profile.username}
             </p>
             <p
-              className={`text-xs mt-0.5 ${isOnline ? 'text-green-400' : isDark ? 'text-gray-500' : 'text-gray-400'}`}
+              className={`text-xs mt-0.5 ${isOnline ? 'text-green-400' : theme.textFaint}`}
             >
-              {isOnline ? '● Online' : '● Offline'}
+              {isOnline ? t('profile.online') : t('profile.offline')}
             </p>
           </div>
 
-          {/* Інформація */}
+          {/* Info */}
           <div
-            className={`mx-4 mb-3 rounded-lg p-3 flex flex-col gap-3 ${isDark ? 'bg-[#1e1f22]' : 'bg-gray-50'}`}
+            className={`mx-4 mb-3 rounded-lg p-3 flex flex-col gap-3 ${theme.bgPrimary}`}
           >
-            {/* Bio */}
             {profile.bio && (
               <div>
                 <p
-                  className={`text-[10px] tracking-widest font-semibold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}
+                  className={`text-[10px] tracking-widest font-semibold mb-1 ${theme.textMuted}`}
                 >
-                  ПРО СЕБЕ
+                  {t('profile.about')}
                 </p>
                 <p
-                  className={`text-xs leading-relaxed break-words whitespace-pre-wrap ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
+                  className={`text-xs leading-relaxed break-words whitespace-pre-wrap ${theme.textSecondary}`}
                 >
                   {profile.bio}
                 </p>
               </div>
             )}
 
-            {/* lastSeen */}
             {!isOwnProfile && !isOnline && profile.lastSeen && (
               <div>
                 <p
-                  className={`text-[10px] tracking-widest font-semibold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}
+                  className={`text-[10px] tracking-widest font-semibold mb-1 ${theme.textMuted}`}
                 >
-                  ОСТАННІЙ РАЗ ОНЛАЙН
+                  {t('profile.lastSeen')}
                 </p>
-                <p
-                  className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
-                >
+                <p className={`text-xs ${theme.textSecondary}`}>
                   {formatLastSeen(profile.lastSeen)}
                 </p>
               </div>
             )}
 
-            {/* createdAt */}
             {profile.createdAt && (
               <div>
                 <p
-                  className={`text-[10px] tracking-widests font-semibold mb-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}
+                  className={`text-[10px] tracking-widest font-semibold mb-1 ${theme.textMuted}`}
                 >
-                  УЧАСНИК З
+                  {t('profile.memberSince')}
                 </p>
-                <p
-                  className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
-                >
-                  {new Date(profile.createdAt).toLocaleDateString('uk-UA', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric',
-                  })}
+                <p className={`text-xs ${theme.textSecondary}`}>
+                  {new Date(profile.createdAt).toLocaleDateString(
+                    i18n.language === 'uk' ? 'uk-UA' : 'en-US',
+                    {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                    },
+                  )}
                 </p>
               </div>
             )}
           </div>
 
-          {/* Actions для свого профілю */}
-          <div className={`px-4 pb-3 flex flex-col gap-1`}>
+          {/* Actions */}
+          <div className="px-4 pb-3 flex flex-col gap-1">
             {isOwnProfile ? (
               <>
                 <button
                   onClick={() => setShowEdit(true)}
-                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${
-                    isDark
-                      ? 'text-gray-300 hover:bg-[#35373c]'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${theme.textSecondary} ${theme.bgHover}`}
                 >
-                  ✏️ Редагувати профіль
+                  ✏️ {t('profile.edit')}
                 </button>
                 <button
                   onClick={handleLogout}
                   className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-red-400 hover:bg-red-500/10 transition-colors"
                 >
-                  → Вийти з акаунту
+                  → {t('profile.logout')}
                 </button>
               </>
             ) : (
@@ -181,7 +172,7 @@ export function ProfileModal({
                 }}
                 className="w-full py-2 rounded-md bg-[#5865f2] hover:bg-[#4752c4] text-white text-sm font-medium transition-colors"
               >
-                Написати
+                {t('profile.message')}
               </button>
             )}
           </div>

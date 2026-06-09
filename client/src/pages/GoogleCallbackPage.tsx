@@ -1,11 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { apiRefresh } from '../api/auth.api';
+import { useThemeContext } from '../context/ThemeContext';
+import { getAuthPage } from '../styles/authPageClasses';
+import { useTranslation } from 'react-i18next';
 
 type Status = 'loading' | 'error';
 
 export function GoogleCallbackPage() {
+  const { t } = useTranslation();
+  const { isDark } = useThemeContext();
+  const ap = getAuthPage(isDark);
   const [searchParams] = useSearchParams();
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -19,9 +25,9 @@ export function GoogleCallbackPage() {
   );
   const [errorMessage, setErrorMessage] = useState(
     errorParam
-      ? 'Не вдалося увійти через Google. Спробуй ще раз.'
+      ? t('googleCallback.errorGoogle')
       : !token
-        ? 'Токен не отримано'
+        ? t('googleCallback.errorNoToken')
         : '',
   );
 
@@ -36,35 +42,33 @@ export function GoogleCallbackPage() {
       })
       .catch(() => {
         setStatus('error');
-        setErrorMessage('Не вдалося завершити вхід');
+        setErrorMessage(t('googleCallback.errorFinish'));
       });
   }, []);
 
   if (status === 'error') {
     return (
-      <div className="h-screen flex items-center justify-center bg-[#1e1f22]">
-        <div className="bg-[#2b2d31] rounded-lg p-8 w-full max-w-sm border border-[#1e1f22] text-center">
+      <div className={ap.page}>
+        <div className={ap.cardCenter}>
           <div className="text-4xl mb-4">❌</div>
-          <h1 className="text-white text-xl font-medium mb-2">Помилка входу</h1>
-          <p className="text-gray-400 text-sm mb-6">{errorMessage}</p>
-          <a href="/login" className="text-[#5865f2] hover:underline text-sm">
-            Повернутись до входу
-          </a>
+          <h1 className={ap.title}>{t('googleCallback.errorTitle')}</h1>
+          <p className={`${ap.subtitle} mb-6`}>{errorMessage}</p>
+          <Link to="/login" className={`text-sm ${ap.link}`}>
+            {t('auth.backToLogin')}
+          </Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex items-center justify-center bg-[#1e1f22]">
-      <div className="bg-[#2b2d31] rounded-lg p-8 w-full max-w-sm border border-[#1e1f22] text-center">
+    <div className={ap.page}>
+      <div className={ap.cardCenter}>
         <div className="flex justify-center mb-4">
           <div className="w-10 h-10 border-2 border-[#5865f2] border-t-transparent rounded-full animate-spin" />
         </div>
-        <h1 className="text-white text-xl font-medium mb-2">
-          Вхід через Google
-        </h1>
-        <p className="text-gray-400 text-sm">Завершуємо авторизацію...</p>
+        <h1 className={ap.title}>{t('googleCallback.title')}</h1>
+        <p className={ap.subtitle}>{t('googleCallback.loading')}</p>
       </div>
     </div>
   );

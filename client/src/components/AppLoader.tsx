@@ -1,7 +1,9 @@
 import LottieImport from 'lottie-react';
 import loadingAnimation from '../assets/loading_animation.json';
+import { getTheme } from '../styles/theme';
+import { useThemeContext } from '../context/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
-/** CJS interop (Vite + main): default — це namespace, компонент — у .default */
 const Lottie =
   (LottieImport as { default?: typeof LottieImport }).default ?? LottieImport;
 
@@ -9,8 +11,6 @@ type Variant = 'fullscreen' | 'overlay';
 
 type Props = {
   label?: string;
-  isDark?: boolean;
-  /** fullscreen — весь екран; overlay — поверх контейнера (батько position: relative) */
   variant?: Variant;
   className?: string;
 };
@@ -19,12 +19,13 @@ const SIZES = { fullscreen: 168, overlay: 128 } as const;
 
 export function AppLoader({
   label,
-  isDark = true,
   variant = 'fullscreen',
   className = '',
 }: Props) {
+  const { isDark } = useThemeContext();
+  const theme = getTheme(isDark);
+  const { t } = useTranslation();
   const size = SIZES[variant];
-  const textMuted = isDark ? 'text-gray-400' : 'text-gray-500';
 
   const body = (
     <div
@@ -32,7 +33,7 @@ export function AppLoader({
       role="status"
       aria-live="polite"
       aria-busy="true"
-      aria-label={label ?? 'Завантаження'}
+      aria-label={label ?? t('messages.loading')}
     >
       <Lottie
         animationData={loadingAnimation}
@@ -40,13 +41,13 @@ export function AppLoader({
         className="pointer-events-none scale-200"
         style={{ width: size, height: size }}
       />
-      {label ? (
+      {label && (
         <p
-          className={`text-sm font-medium text-center max-w-[16rem] ${textMuted}`}
+          className={`text-sm font-medium text-center max-w-[16rem] ${theme.textMuted}`}
         >
           {label}
         </p>
-      ) : null}
+      )}
     </div>
   );
 
@@ -64,9 +65,7 @@ export function AppLoader({
 
   return (
     <div
-      className={`h-screen w-full flex items-center justify-center transition-colors duration-200 ${
-        isDark ? 'bg-[#1e1f22]' : 'bg-gray-50'
-      } ${className}`}
+      className={`h-screen w-full flex items-center justify-center transition-colors duration-200 ${theme.bgPrimary} ${className}`}
     >
       {body}
     </div>

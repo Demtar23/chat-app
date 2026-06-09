@@ -1,4 +1,6 @@
 import type { Message } from '../../../types/message';
+import { getTheme } from '../../../styles/theme';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   pinnedMessages: Message[];
@@ -15,28 +17,24 @@ export function PinnedMessageBar({
   onUnpin,
   currentIndex,
 }: Props) {
-   if (pinnedMessages.length === 0) return null;
+  const theme = getTheme(isDark);
+  const { t } = useTranslation();
 
-  // захист від виходу за межі масиву
+  if (pinnedMessages.length === 0) {
+    return null;
+  }
+
   const safeIndex = Math.min(currentIndex, pinnedMessages.length - 1);
   const current = pinnedMessages[safeIndex];
-
-  if (!current) return null;
-
-  function handleClick() {
-    onScrollToMessage(current._id);
+  if (!current) {
+    return null;
   }
 
   return (
     <div
-      className={`flex items-center gap-2 px-4 py-2 border-b cursor-pointer transition-colors duration-200 ${
-        isDark
-          ? 'bg-[#2b2d31] border-[#1e1f22] hover:bg-[#35373c]'
-          : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
-      }`}
-      onClick={handleClick}
+      className={`flex items-center gap-2 px-4 py-2 border-b cursor-pointer transition-colors duration-200 ${theme.bgSecondary} ${theme.border} ${theme.bgHover}`}
+      onClick={() => onScrollToMessage(current._id)}
     >
-      {/* індикатор кількості пінів */}
       <div className="flex flex-col gap-0.5 flex-shrink-0">
         {pinnedMessages.map((_, i) => (
           <div
@@ -52,37 +50,25 @@ export function PinnedMessageBar({
         ))}
       </div>
 
-      {/* вміст */}
       <div className="flex-1 min-w-0">
-        <p className="text-[11px] text-[#5865f2] font-medium mb-0.5">
+        <p className={`text-[11px] font-medium mb-0.5 ${theme.brandText}`}>
           📌 {current.senderUsername}
           {pinnedMessages.length > 1 && (
-            <span
-              className={`ml-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}
-            >
+            <span className={`ml-1 ${theme.textFaint}`}>
               {currentIndex + 1}/{pinnedMessages.length}
             </span>
           )}
         </p>
-        <p
-          className={`text-xs truncate ${isDark ? 'text-gray-400' : 'text-gray-500'}`}
-        >
-          {current.text}
-        </p>
+        <p className={`text-xs truncate ${theme.textMuted}`}>{current.text}</p>
       </div>
 
-      {/* кнопка відкріпити */}
       <button
         onClick={(e) => {
           e.stopPropagation();
           onUnpin(current._id);
         }}
-        className={`text-xs px-2 py-1 rounded flex-shrink-0 ${
-          isDark
-            ? 'text-gray-500 hover:text-gray-300 hover:bg-[#404249]'
-            : 'text-gray-400 hover:text-gray-600 hover:bg-gray-200'
-        }`}
-        title="Відкріпити"
+        className={`text-xs px-2 py-1 rounded flex-shrink-0 ${theme.textFaint} ${theme.bgHover}`}
+        title={t('messages.actions.unpin')}
       >
         ✕
       </button>

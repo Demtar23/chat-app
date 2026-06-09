@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+import { getTheme } from '../../../styles/theme';
 import type { UserProfile } from '../../../types/user';
 import { formatLastSeen } from '../../../utils/formatLastSeen';
 import { Avatar } from './Avatar';
@@ -35,15 +37,15 @@ export function UserHoverCard({
 }: Props) {
   // const color = getColor(user.username);
 
+  const { t } = useTranslation();
+  const theme = getTheme(isDark);
+
   const isCurrentUser = currentUserId === user._id;
 
   return (
     <div
-      className={`w-56 rounded-lg shadow-xl border p-3 ${
-        isDark ? 'bg-[#2b2d31] border-[#1e1f22]' : 'bg-white border-gray-200'
-      }`}
+      className={`w-56 rounded-lg shadow-xl border p-3 ${theme.bgSecondary} ${theme.border}`}
     >
-      {/* Аватар + ім'я */}
       <div className="flex items-center gap-3 mb-2">
         <div
           className="relative flex-shrink-0"
@@ -64,31 +66,24 @@ export function UserHoverCard({
             } ${isOnline ? 'bg-green-500' : 'bg-gray-500'}`}
           />
         </div>
-
         <div className="min-w-0">
-          <p
-            className={`text-sm font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}
-          >
+          <p className={`text-sm font-medium truncate ${theme.textPrimary}`}>
             {user.username}
           </p>
           <p
-            className={`text-[11px] ${isOnline ? 'text-green-400' : isDark ? 'text-gray-500' : 'text-gray-400'}`}
+            className={`text-[11px] ${isOnline ? 'text-green-400' : theme.textFaint}`}
           >
-            {isOnline ? 'Online' : `Був ${formatLastSeen(user.lastSeen)}`}
+            {isOnline ? t('userHoverCard.online') : `${t('userHoverCard.lastSeen')} ${formatLastSeen(user.lastSeen)}`}
           </p>
         </div>
       </div>
 
-      {/* Bio */}
       {user.bio && (
-        <p
-          className={`text-xs mb-2 leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-500'}`}
-        >
+        <p className={`text-xs mb-2 leading-relaxed ${theme.textMuted}`}>
           {user.bio.length > 20 ? `${user.bio.slice(0, 20)}…` : user.bio}
         </p>
       )}
 
-      {/* Кнопка написати */}
       {!isCurrentUser && (
         <button
           onClick={() => {
@@ -97,7 +92,7 @@ export function UserHoverCard({
           }}
           className="w-full text-sm py-1.5 rounded-md bg-[#5865f2] hover:bg-[#4752c4] text-white transition-colors"
         >
-          Написати
+          {t('userHoverCard.message')}
         </button>
       )}
     </div>

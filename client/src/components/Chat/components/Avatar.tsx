@@ -1,3 +1,5 @@
+import { getTheme } from '../../../styles/theme';
+
 const COLORS = [
   { bg: 'bg-purple-100', text: 'text-purple-800' },
   { bg: 'bg-teal-100', text: 'text-teal-800' },
@@ -38,11 +40,12 @@ export function Avatar({
 }: Props) {
   const color = getColor(username);
   const s = SIZE[size];
+  const t = getTheme(isDark);
 
   if (avatar && isEmoji(avatar)) {
     return (
       <div
-        className={`${s.outer} rounded-full flex items-center justify-center flex-shrink-0 ${isDark ? 'bg-[#383a40]' : 'bg-gray-200'} ${className}`}
+        className={`${s.outer} rounded-full flex items-center justify-center flex-shrink-0 ${t.bgMessage} ${className}`}
       >
         <span className={s.emoji}>{avatar}</span>
       </div>

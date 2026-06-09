@@ -5,6 +5,8 @@ import { MessageStatus } from './MessageStatus';
 import type { Message, ReplyTo } from '../../../types/message';
 import type { UserProfile } from '../../../types/user';
 import { Avatar } from './Avatar';
+import { getTheme } from '../../../styles/theme';
+import { useTranslation } from 'react-i18next';
 
 // const COLORS = [
 //   'text-[#5DCAA5]',
@@ -85,6 +87,10 @@ export function MessageItem({
 
   const isDeleted = message.isDeleted;
   const isDeletedForMe = message.deletedFor?.includes(currentUserId);
+
+  const { t } = useTranslation();
+
+  const theme = getTheme(isDark);
 
   useEffect(() => {
     if (!showPicker) return;
@@ -172,22 +178,19 @@ export function MessageItem({
               });
             }}
             onMouseLeave={onUserLeave}
-            className={`text-[13px] font-medium cursor-pointer hover:underline ${
-              isDark ? 'text-white' : 'text-gray-900'
-            }`}
+            className={`text-[13px] font-medium cursor-pointer hover:underline ${theme.textPrimary}`}
           >
             {message.senderUsername}
           </span>
 
-          <span
-            className={`text-[11px] ${
-              isDark ? 'text-gray-500' : 'text-gray-400'
-            }`}
-          >
+          <span className={`text-[11px] ${theme.textFaint}`}>
             {formatTime(message.createdAt)}
           </span>
           {message.isPinned && !isDeleted && (
-            <span className="text-[10px] text-[#5865f2]" title="Закріплено">
+            <span
+              className="text-[10px] text-[#5865f2]"
+              title={t('messages.system.pinned')}
+            >
               📌
             </span>
           )}
@@ -196,7 +199,7 @@ export function MessageItem({
             <span
               className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}
             >
-              (edited)
+              {t('messages.system.edited')}
             </span>
           )}
 
@@ -210,7 +213,7 @@ export function MessageItem({
               <button
                 onClick={() => setShowPicker((prev) => !prev)}
                 className="text-sm"
-                title="Додати реакцію"
+                title={t('messages.actions.react')}
               >
                 😊
               </button>
@@ -224,7 +227,7 @@ export function MessageItem({
                   })
                 }
                 className={`text-xs px-1 ${isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
-                title="Відповісти"
+                title={t('messages.actions.reply')}
               >
                 ↩
               </button>
@@ -234,13 +237,13 @@ export function MessageItem({
                 <button
                   onClick={() => setShowMenu((prev) => !prev)}
                   className={`text-xs px-1 ${isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
-                  title="Більше"
+                  title={t('messages.actions.more')}
                 >
                   ···
                 </button>
                 {showMenu && (
                   <div
-                    className={`absolute top-5 left-0 z-20 rounded-lg shadow-xl border min-w-[140px] py-1 ${isDark ? 'bg-[#2b2d31] border-[#1e1f22]' : 'bg-white border-gray-200'}`}
+                    className={`absolute top-5 left-0 z-20 rounded-lg shadow-xl border min-w-[140px] py-1 ${theme.bgSecondary} ${theme.border}`}
                   >
                     {isOwnMessage && (
                       <button
@@ -249,9 +252,9 @@ export function MessageItem({
                           setEditText(message.text);
                           setShowMenu(false);
                         }}
-                        className={`w-full text-left px-3 py-1.5 text-sm ${isDark ? 'text-gray-300 hover:bg-[#35373c]' : 'text-gray-700 hover:bg-gray-100'}`}
+                        className={`w-full text-left px-3 py-1.5 text-sm ${theme.textSecondary} ${theme.bgHover}`}
                       >
-                        ✏️ Редагувати
+                        ✏️ {t('messages.actions.edit')}
                       </button>
                     )}
                     {isOwnMessage && (
@@ -262,7 +265,7 @@ export function MessageItem({
                         }}
                         className="w-full text-left px-3 py-1.5 text-sm text-red-400 hover:bg-red-500/10"
                       >
-                        🗑️ Видалити для всіх
+                        🗑️ {t('messages.actions.deleteForAll')}
                       </button>
                     )}
                     <button
@@ -272,7 +275,7 @@ export function MessageItem({
                       }}
                       className={`w-full text-left px-3 py-1.5 text-sm ${isDark ? 'text-gray-300 hover:bg-[#35373c]' : 'text-gray-700 hover:bg-gray-100'}`}
                     >
-                      🙈 Видалити для мене
+                      🙈 {t('messages.actions.deleteForMe')}
                     </button>
 
                     {/* ← pin кнопка тут, всередині меню */}
@@ -283,7 +286,9 @@ export function MessageItem({
                       }}
                       className={`w-full text-left px-3 py-1.5 text-sm ${isDark ? 'text-gray-300 hover:bg-[#35373c]' : 'text-gray-700 hover:bg-gray-100'}`}
                     >
-                      {message.isPinned ? '📌 Відкріпити' : '📌 Закріпити'}
+                      {message.isPinned
+                        ? `📌 ${t('messages.actions.unpin')}`
+                        : `📌 ${t('messages.actions.pin')}`}
                     </button>
                   </div>
                 )}
@@ -321,26 +326,28 @@ export function MessageItem({
                 if (e.key === 'Escape') setIsEditing(false);
               }}
               autoFocus
-              className={`flex-1 text-sm px-2 py-1 rounded outline-none border focus:border-[#5865f2] ${isDark ? 'bg-[#383a40] text-white border-gray-600' : 'bg-gray-100 text-gray-900 border-gray-300'}`}
+              className={`flex-1 text-sm px-2 py-1 rounded outline-none border focus:border-[#5865f2] ${theme.bgMessage} ${theme.textPrimary} ${isDark ? 'border-gray-600' : 'border-gray-300'}`}
             />
             <button
               onClick={handleEditSubmit}
               className="text-xs px-2 py-1 bg-[#5865f2] text-white rounded"
             >
-              Зберегти
+              {t('messages.actions.save')}
             </button>
             <button
               onClick={() => setIsEditing(false)}
               className={`text-xs px-2 py-1 rounded ${isDark ? 'text-gray-400 hover:bg-[#35373c]' : 'text-gray-500 hover:bg-gray-100'}`}
             >
-              Скасувати
+              {t('messages.actions.cancel')}
             </button>
           </div>
         ) : (
           <p
-            className={`text-[13px] leading-relaxed ${isDeleted ? 'italic' : ''} ${isDark ? (isDeleted ? 'text-gray-600' : 'text-[#dbdee1]') : isDeleted ? 'text-gray-400' : 'text-gray-700'}`}
+            className={`text-[13px] leading-relaxed ${isDeleted ? 'italic' : ''} ${
+              isDeleted ? theme.textFaintest : theme.textSecondary
+            }`}
           >
-            {message.text}
+            {isDeleted ? t('messages.system.deleted') : message.text}
           </p>
         )}
 

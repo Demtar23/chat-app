@@ -5,6 +5,8 @@ import type { ActiveChat } from '../../../types/chat';
 import type { OnlineUser } from '../../../types/socket';
 import type { UserProfile } from '../../../types/user';
 import { Avatar } from './Avatar';
+import { getTheme } from '../../../styles/theme';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   isDark: boolean;
@@ -40,16 +42,19 @@ export function Sidebar({
     offline: true,
   });
 
+  const { t } = useTranslation();
+  const theme = getTheme(isDark);
+
   function toggleSection(section: 'rooms' | 'direct' | 'online' | 'offline') {
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
   }
 
-  const bg = isDark ? 'bg-[#2b2d31]' : 'bg-gray-50';
-  const border = isDark ? 'border-[#1e1f22]' : 'border-gray-200';
-  const textMuted = isDark ? 'text-gray-400' : 'text-gray-500';
-  const textPrimary = isDark ? 'text-white' : 'text-gray-900';
-  const activeItem = isDark ? 'bg-[#404249]' : 'bg-gray-200';
-  const hoverItem = isDark ? 'hover:bg-[#35373c]' : 'hover:bg-gray-100';
+  const bg = theme.bgSecondary;
+  const border = theme.border;
+  const textMuted = theme.textMuted;
+  const textPrimary = theme.textPrimary;
+  const activeItem = theme.bgActive;
+  const hoverItem = theme.bgHover;
 
   const onlineUserIds = new Set(onlineUsers.map((u) => u.userId));
 
@@ -70,7 +75,7 @@ export function Sidebar({
           }`}
         >
           <span className={textMuted}>#</span>
-          <span className={`font-medium ${textPrimary}`}>global</span>
+          <span className={`font-medium ${textPrimary}`}>{t('sidebar.global')}</span>
         </button>
       </div>
 
@@ -83,12 +88,12 @@ export function Sidebar({
               className={`text-[10px] tracking-widest font-medium ${textMuted} flex items-center gap-1`}
             >
               <span>{openSections.rooms ? '▾' : '▸'}</span>
-              ROOMS
+              {t('sidebar.rooms')}
             </button>
             <button
               onClick={onCreateRoom}
               className={`text-lg leading-none ${textMuted} hover:text-white transition-colors`}
-              title="Create room"
+              title={t('sidebar.createRoom')}
             >
               +
             </button>
@@ -102,7 +107,7 @@ export function Sidebar({
                 <>
                   {rooms.length === 0 && (
                     <p className={`text-xs px-3 py-1 ${textMuted}`}>
-                      Немає кімнат
+                      {t('sidebar.noRooms')}
                     </p>
                   )}
                   {rooms.map((room) => (
@@ -134,7 +139,7 @@ export function Sidebar({
               className={`text-[10px] tracking-widest font-medium ${textMuted} flex items-center gap-1`}
             >
               <span>{openSections.direct ? '▾' : '▸'}</span>
-              DIRECT MESSAGES
+              {t('sidebar.direct')}
             </button>
           </div>
 
@@ -147,7 +152,7 @@ export function Sidebar({
                   className={`text-[10px] tracking-widest font-medium ${textMuted} flex items-center gap-1 px-3 mb-1`}
                 >
                   <span>{openSections.online ? '▾' : '▸'}</span>
-                  ONLINE —{' '}
+                  {t('sidebar.online')} — {' '}
                   {onlineUsers.filter((u) => u.userId !== currentUserId).length}
                 </button>
 
@@ -199,7 +204,7 @@ export function Sidebar({
                     className={`text-[10px] tracking-widest font-medium ${textMuted} flex items-center gap-1 px-3 mb-1`}
                   >
                     <span>{openSections.offline ? '▾' : '▸'}</span>
-                    OFFLINE — {offlineUsers.length}
+                    {t('sidebar.offline')} — {offlineUsers.length}
                   </button>
 
                   {openSections.offline &&

@@ -30,6 +30,9 @@ import { UserHoverCard } from '../components/Chat/components/UserHoverCard';
 import { ProfileModal } from '../components/Chat/components/ProfileModal';
 import { notify } from '../utils/toast';
 import { SearchResults } from '../components/Chat/components/SearchResults';
+import { getTheme } from '../styles/theme';
+import { useThemeContext } from '../context/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 function getActiveChatKey(c: ActiveChat): string {
   if (c.type === 'global') return 'global';
@@ -43,7 +46,7 @@ export function ChatPage() {
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [activeChat, setActiveChat] = useState<ActiveChat>({ type: 'global' });
-  const [isDark, setIsDark] = useState(true);
+  const { isDark } = useThemeContext();
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const [showCreateRoom, setShowCreateRoom] = useState(false);
   // const [showProfileModal, setShowProfileModal] = useState(false);
@@ -83,6 +86,10 @@ export function ChatPage() {
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const sendingFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const theme = getTheme(isDark);
+
+  const { t } = useTranslation();
 
   const clearSendingFallback = useCallback(() => {
     if (sendingFallbackRef.current) {
@@ -801,14 +808,11 @@ export function ChatPage() {
   }
 
   return (
-    <div
-      className={`h-screen flex flex-col ${isDark ? 'bg-[#1e1f22]' : 'bg-white'}`}
-    >
+    <div className={`h-screen flex flex-col ${theme.bgPrimary}`}>
       <TopBar
         title={getTopBarTitle()}
         onlineCount={onlineUsers.length}
         isDark={isDark}
-        onToggleTheme={() => setIsDark(!isDark)}
         onOpenMyProfile={handleOpenMyProfile}
         myProfile={myProfile ?? undefined}
         onSearch={handleSearch}
@@ -836,8 +840,7 @@ export function ChatPage() {
           {isSocketDisconnected && (
             <AppLoader
               variant="overlay"
-              isDark={isDark}
-              label="Перепідключення до сервера…"
+              label={t('app.reconnecting')}
             />
           )}
           {isMessagesLoading ? (

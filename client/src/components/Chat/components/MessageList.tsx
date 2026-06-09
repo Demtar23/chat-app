@@ -12,6 +12,8 @@ import type { UserProfile } from '../../../types/user';
 import { DateSeparator } from './DateSeparator';
 import type { ActiveChat } from '../../../types/chat';
 import { EmptyChat } from './EmptyChat';
+import { getTheme } from '../../../styles/theme';
+import { useTranslation } from 'react-i18next';
 
 type Props = {
   messages: Message[];
@@ -74,6 +76,10 @@ export function MessageList({
 
   const prevScrollHeightRef = useRef(0);
   const prevFirstMessageIdRef = useRef('');
+
+  const { t } = useTranslation();
+
+  const theme = getTheme(isDark);
 
   function checkShouldLoadMore() {
     const container = containerRef.current;
@@ -222,9 +228,7 @@ export function MessageList({
   return (
     <div
       ref={containerRef}
-      className={`messages-container flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3 min-h-0 ${
-        isDark ? 'bg-[#313338]' : 'bg-white'
-      } ${isLoading ? 'opacity-95' : 'opacity-100'}`}
+      className={`messages-container flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-3 min-h-0 ${theme.bgTertiary} ${isLoading ? 'opacity-95' : 'opacity-100'}`}
     >
       {isLoading ? (
         <MessageThreadSkeleton isDark={isDark} />
@@ -232,38 +236,26 @@ export function MessageList({
         <EmptyChat
           title={
             activeChat.type === 'private'
-              ? 'Початок розмови'
-              : 'У кімнаті ще немає повідомлень'
+              ? t('emptyChat.privateTitle')
+              : t('emptyChat.roomTitle')
           }
           description={
             activeChat.type === 'private'
-              ? 'Надішли перше повідомлення та розпочни спілкування.'
-              : 'Будь першим, хто напише повідомлення.'
+              ? t('emptyChat.privateDescription')
+              : t('emptyChat.roomDescription')
           }
         />
       ) : (
         <>
           {isLoadingMore && (
             <div className="flex justify-center py-2">
-              <span
-                className={`text-xs ${
-                  isDark ? 'text-gray-500' : 'text-gray-400'
-                }`}
-              >
-                Завантаження...
-              </span>
+              <span className={`text-xs ${theme.textFaint}`}>{t('messages.loading')}</span>
             </div>
           )}
 
           {!hasMore && (
             <div className="flex justify-center py-2">
-              <span
-                className={`text-xs ${
-                  isDark ? 'text-gray-600' : 'text-gray-400'
-                }`}
-              >
-                Початок розмови
-              </span>
+              <span className={`text-xs ${theme.textFaint}`}>{t('emptyChat.privateTitle')}</span>
             </div>
           )}
 
@@ -310,11 +302,7 @@ export function MessageList({
           onClick={() =>
             bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
           }
-          className={`fixed bottom-20 right-6 z-10 w-9 h-9 rounded-full flex items-center justify-center shadow-lg border transition-all ${
-            isDark
-              ? 'bg-[#2b2d31] border-[#1e1f22] text-white hover:bg-[#35373c]'
-              : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-100'
-          }`}
+          className={`fixed bottom-20 right-6 z-10 w-9 h-9 rounded-full flex items-center justify-center shadow-lg border transition-all ${theme.bgSecondary} ${theme.border} ${theme.textPrimary} ${theme.bgHover}`}
         >
           ↓
         </button>

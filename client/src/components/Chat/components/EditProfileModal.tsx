@@ -11,6 +11,8 @@ import { Avatar } from './Avatar';
 import { changePasswordSchema } from '../../../validations/auth.schema';
 import { apiChangePassword } from '../../../api/auth.api';
 import { useFormField } from '../../../hooks/useFormField';
+import { getTheme } from '../../../styles/theme';
+import { useTranslation } from 'react-i18next';
 
 const IMAGE_KIT_URL = import.meta.env.VITE_IMAGE_KIT_URL;
 
@@ -138,11 +140,12 @@ const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 type Tab = 'profile' | 'password';
 
 function inputClass(isDark: boolean, error?: string) {
+  const theme = getTheme(isDark);
   return `w-full text-sm px-3 py-2.5 rounded-md outline-none border transition-colors ${
     error
       ? 'border-red-500 focus:border-red-400'
       : 'border-transparent focus:border-[#5865f2]'
-  } ${isDark ? 'bg-[#1e1f22] text-white placeholder-gray-600' : 'bg-gray-100 text-gray-900 placeholder-gray-400'}`;
+  } ${theme.bgInput} ${theme.textPrimary} placeholder:${theme.textFaintest}`;
 }
 
 export function EditProfileModal({
@@ -156,6 +159,8 @@ export function EditProfileModal({
 }: Props) {
   const { accessToken } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('profile');
+
+  const { t } = useTranslation();
 
   const [bio, setBio] = useState(currentBio);
   const [bannerColor, setBannerColor] = useState<string | null>(
@@ -180,17 +185,19 @@ export function EditProfileModal({
   // аватар з Google або ImageKit preset
   const isPresetAvatar = avatar?.startsWith('http') && !isUploadedAvatar;
 
+  const theme = getTheme(isDark);
+
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
 
     if (!ALLOWED_TYPES.includes(file.type)) {
-      notify.error('Дозволені формати: jpg, png, webp, gif');
+      notify.error(t('editProfile.messages.invalidFormat'));
       return;
     }
 
     if (file.size > MAX_SIZE) {
-      notify.error('Максимальний розмір файлу — 5MB');
+      notify.error(t('editProfile.messages.fileTooLarge'));
       return;
     }
 
@@ -214,10 +221,12 @@ export function EditProfileModal({
       // очищаємо input
       if (fileInputRef.current) fileInputRef.current.value = '';
 
-      notify.success('Фото завантажено');
+      notify.success(t('editProfile.messages.photoUploaded'));
     } catch (err) {
       notify.error(
-        err instanceof Error ? err.message : 'Не вдалося завантажити фото',
+        err instanceof Error
+          ? err.message
+          : t('editProfile.messages.uploadError'),
       );
     } finally {
       setIsUploadingPhoto(false);
@@ -235,10 +244,12 @@ export function EditProfileModal({
     try {
       await deleteAvatarApi(accessToken);
       setAvatar(null);
-      notify.success('Фото видалено');
+      notify.success(t('editProfile.messages.photoDeleted'));
     } catch (err) {
       notify.error(
-        err instanceof Error ? err.message : 'Не вдалося видалити фото',
+        err instanceof Error
+          ? err.message
+          : t('editProfile.messages.deleteError'),
       );
     }
   }
@@ -268,9 +279,9 @@ export function EditProfileModal({
         updated.avatar ?? null,
       );
       onClose();
-      notify.success('Профіль оновлено');
+      notify.success(t('editProfile.messages.profileUpdated'));
     } catch {
-      notify.error('Не вдалося зберегти профіль');
+      notify.error(t('editProfile.messages.saveError'));
     } finally {
       setIsProfileLoading(false);
     }
@@ -285,7 +296,7 @@ export function EditProfileModal({
     if (!isOldValid || !isNewValid) return;
 
     if (oldPassword.value === newPassword.value) {
-      newPassword.setError('New password must be different from old password');
+      newPassword.setError(t('editProfile.messages.passwordMismatch'));
       return;
     }
 
@@ -296,12 +307,14 @@ export function EditProfileModal({
         newPassword.value,
         accessToken,
       );
-      notify.success('Пароль змінено');
+      notify.success(t('editProfile.messages.passwordChanged'));
       oldPassword.reset();
       newPassword.reset();
     } catch (err) {
       notify.error(
-        err instanceof Error ? err.message : 'Не вдалося змінити пароль',
+        err instanceof Error
+          ? err.message
+          : t('editProfile.messages.passwordError'),
       );
     } finally {
       setIsPasswordLoading(false);
@@ -317,28 +330,24 @@ export function EditProfileModal({
       onClick={onClose}
     >
       <div
-        className={`w-full max-w-sm rounded-lg overflow-y-auto max-h-[90vh] ${isDark ? 'bg-[#2b2d31]' : 'bg-white'}`}
+        className={`w-full max-w-sm rounded-lg overflow-y-auto max-h-[90vh] ${theme.bgSecondary}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* tabs */}
-        <div
-          className={`flex border-b ${isDark ? 'border-[#1e1f22]' : 'border-gray-200'}`}
-        >
+        <div className={`flex border-b ${theme.border}`}>
           {(['profile', 'password'] as Tab[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`flex-1 py-3 text-sm font-medium transition-colors ${
                 activeTab === tab
-                  ? isDark
-                    ? 'text-white border-b-2 border-[#5865f2]'
-                    : 'text-gray-900 border-b-2 border-blue-500'
-                  : isDark
-                    ? 'text-gray-500 hover:text-gray-300'
-                    : 'text-gray-400 hover:text-gray-600'
+                  ? `${theme.textPrimary} border-b-2 ${theme.brandBorder}`
+                  : `${theme.textFaint} ${theme.bgHover}`
               }`}
             >
-              {tab === 'profile' ? 'Профіль' : 'Пароль'}
+              {tab === 'profile'
+                ? t('editProfile.tabs.profile')
+                : t('editProfile.tabs.password')}
             </button>
           ))}
         </div>
@@ -349,25 +358,19 @@ export function EditProfileModal({
               {/* Bio */}
               <div className="flex flex-col gap-1.5">
                 <label
-                  className={`text-xs font-medium tracking-wide ${isDark ? 'text-gray-400' : 'text-gray-500'}`}
+                  className={`text-xs font-medium tracking-wide ${theme.textMuted}`}
                 >
-                  BIO
+                  {t('editProfile.bio')}
                 </label>
                 <textarea
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
                   maxLength={200}
                   rows={3}
-                  placeholder="Розкажи про себе..."
-                  className={`text-sm px-3 py-2.5 rounded-md outline-none border border-transparent focus:border-[#5865f2] resize-none ${
-                    isDark
-                      ? 'bg-[#1e1f22] text-white placeholder-gray-600'
-                      : 'bg-gray-100 text-gray-900 placeholder-gray-400'
-                  }`}
+                  placeholder={t('editProfile.bioPlaceholder')}
+                  className={`text-sm px-3 py-2.5 rounded-md outline-none border border-transparent focus:border-[#5865f2] resize-none ${theme.bgInput} ${theme.textPrimary}`}
                 />
-                <p
-                  className={`text-[10px] text-right ${isDark ? 'text-gray-600' : 'text-gray-400'}`}
-                >
+                <p className={`text-[10px] text-right ${theme.textFaintest}`}>
                   {bio.length}/200
                 </p>
               </div>
@@ -375,9 +378,9 @@ export function EditProfileModal({
               {/* Avatar */}
               <div className="flex flex-col gap-2">
                 <label
-                  className={`text-xs font-medium tracking-wide ${isDark ? 'text-gray-400' : 'text-gray-500'}`}
+                  className={`text-xs font-medium tracking-wide ${theme.textMuted}`}
                 >
-                  АВАТАР
+                  {t('editProfile.avatar')}
                 </label>
 
                 {/* Preview */}
@@ -402,13 +405,9 @@ export function EditProfileModal({
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className={`text-xs px-2.5 py-1.5 rounded-md border transition-colors ${
-                        isDark
-                          ? 'border-gray-600 text-gray-300 hover:bg-[#35373c]'
-                          : 'border-gray-300 text-gray-600 hover:bg-gray-50'
-                      }`}
+                      className={`text-xs px-2.5 py-1.5 rounded-md border transition-colors ${theme.border} ${theme.textSecondary} ${theme.bgHover}`}
                     >
-                      📷 Завантажити фото
+                      📷 {t('editProfile.uploadPhoto')}
                     </button>
 
                     {/* кнопка upload якщо є preview */}
@@ -421,15 +420,15 @@ export function EditProfileModal({
                           className="text-xs px-2.5 py-1.5 rounded-md bg-[#5865f2] hover:bg-[#4752c4] disabled:opacity-50 text-white transition-colors"
                         >
                           {isUploadingPhoto
-                            ? 'Завантаження...'
-                            : 'Зберегти фото'}
+                            ? t('editProfile.actions.saving')
+                            : t('editProfile.savePhoto')}
                         </button>
                         <button
                           type="button"
                           onClick={handleCancelPhoto}
-                          className={`text-xs px-2.5 py-1.5 rounded-md ${isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
+                          className={`text-xs px-2.5 py-1.5 rounded-md ${theme.textFaint} ${theme.bgHover}`}
                         >
-                          Скасувати
+                          {t('editProfile.actions.cancel')}
                         </button>
                       </>
                     )}
@@ -442,7 +441,7 @@ export function EditProfileModal({
                         onClick={handleDeletePhoto}
                         className="text-xs px-2.5 py-1.5 rounded-md text-red-400 hover:text-red-300 transition-colors"
                       >
-                        Видалити фото
+                        {t('editProfile.deletePhoto')}
                       </button>
                     )}
 
@@ -453,9 +452,9 @@ export function EditProfileModal({
                         <button
                           type="button"
                           onClick={() => setAvatar(null)}
-                          className={`text-xs ${isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
+                          className={`text-xs ${theme.textFaint} ${theme.bgHover}`}
                         >
-                          Скинути
+                          {t('editProfile.reset')}
                         </button>
                       )}
 
@@ -464,9 +463,9 @@ export function EditProfileModal({
                       <button
                         type="button"
                         onClick={() => setAvatar(null)}
-                        className={`text-xs ${isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
+                        className={`text-xs self-start ${theme.textFaint} ${theme.bgHover}`}
                       >
-                        Скинути
+                        {t('editProfile.reset')}
                       </button>
                     )}
                   </div>
@@ -481,10 +480,8 @@ export function EditProfileModal({
                   className="hidden"
                 />
 
-                <p
-                  className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}
-                >
-                  JPG, PNG, WebP, GIF — до 5MB
+                <p className={`text-[10px] ${theme.textFaintest}`}>
+                  {t('editProfile.avatarHint')}
                 </p>
 
                 {/* Emoji grid */}
@@ -513,9 +510,9 @@ export function EditProfileModal({
               {/* Banner color */}
               <div className="flex flex-col gap-2">
                 <label
-                  className={`text-xs font-medium tracking-wide ${isDark ? 'text-gray-400' : 'text-gray-500'}`}
+                  className={`text-xs font-medium tracking-wide ${theme.textMuted}`}
                 >
-                  КОЛІР БАНЕРА
+                  {t('editProfile.bannerColor')}
                 </label>
                 <div
                   className="h-10 rounded-md transition-colors duration-200"
@@ -542,7 +539,7 @@ export function EditProfileModal({
                     onClick={() => setBannerColor(null)}
                     className={`text-xs self-start ${isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
                   >
-                    Скинути до дефолтного
+                    {t('editProfile.reset')}
                   </button>
                 )}
               </div>
@@ -551,16 +548,18 @@ export function EditProfileModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className={`text-sm px-4 py-2 rounded-md ${isDark ? 'text-gray-400 hover:bg-[#35373c]' : 'text-gray-500 hover:bg-gray-100'}`}
+                  className={`text-sm px-4 py-2 rounded-md ${theme.textMuted} ${theme.bgHover}`}
                 >
-                  Скасувати
+                  {t('editProfile.cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={isProfileLoading}
                   className="bg-[#5865f2] hover:bg-[#4752c4] disabled:opacity-50 text-white text-sm px-4 py-2 rounded-md transition-colors"
                 >
-                  {isProfileLoading ? 'Збереження...' : 'Зберегти'}
+                  {isProfileLoading
+                    ? t('editProfile.actions.savings')
+                    : t('editProfile.actions.save')}
                 </button>
               </div>
             </form>
@@ -574,9 +573,9 @@ export function EditProfileModal({
             >
               <div className="flex flex-col gap-1.5">
                 <label
-                  className={`text-xs font-medium tracking-wide ${isDark ? 'text-gray-400' : 'text-gray-500'}`}
+                  className={`text-xs font-medium tracking-wide ${theme.textMuted}`}
                 >
-                  ПОТОЧНИЙ ПАРОЛЬ
+                  {t('editProfile.password.current')}
                 </label>
                 <input
                   type="password"
@@ -584,7 +583,7 @@ export function EditProfileModal({
                   onChange={oldPassword.onChange}
                   onBlur={oldPassword.onBlur}
                   className={inputClass(isDark, oldPassword.error)}
-                  placeholder="Введи поточний пароль"
+                  placeholder={t('editProfile.password.currentPlaceholder')}
                   autoComplete="current-password"
                 />
                 {oldPassword.error && (
@@ -594,9 +593,9 @@ export function EditProfileModal({
 
               <div className="flex flex-col gap-1.5">
                 <label
-                  className={`text-xs font-medium tracking-wide ${isDark ? 'text-gray-400' : 'text-gray-500'}`}
+                  className={`text-xs font-medium tracking-wide ${theme.textMuted}`}
                 >
-                  НОВИЙ ПАРОЛЬ
+                  {t('editProfile.password.new')}
                 </label>
                 <input
                   type="password"
@@ -604,7 +603,7 @@ export function EditProfileModal({
                   onChange={newPassword.onChange}
                   onBlur={newPassword.onBlur}
                   className={inputClass(isDark, newPassword.error)}
-                  placeholder="Мін. 8 символів, велика/мала літера, цифра, спецсимвол"
+                  placeholder={t('editProfile.password.newPlaceholder')}
                   autoComplete="new-password"
                 />
                 {newPassword.error && (
@@ -616,16 +615,18 @@ export function EditProfileModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className={`text-sm px-4 py-2 rounded-md ${isDark ? 'text-gray-400 hover:bg-[#35373c]' : 'text-gray-500 hover:bg-gray-100'}`}
+                  className={`text-sm px-4 py-2 rounded-md ${theme.textMuted} ${theme.bgHover}`}
                 >
-                  Скасувати
+                  {t('editProfile.actions.cancel')}
                 </button>
                 <button
                   type="submit"
                   disabled={isPasswordLoading}
                   className="bg-[#5865f2] hover:bg-[#4752c4] disabled:opacity-50 text-white text-sm px-4 py-2 rounded-md transition-colors"
                 >
-                  {isPasswordLoading ? 'Збереження...' : 'Змінити пароль'}
+                  {isPasswordLoading
+                    ? t('editProfile.actions.saving')
+                    : t('editProfile.password.save')}
                 </button>
               </div>
             </form>

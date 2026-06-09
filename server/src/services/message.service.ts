@@ -157,7 +157,7 @@ async function deleteMessageForAll(messageId: string, userId: string) {
   }
 
   message.isDeleted = true;
-  message.text = 'Повідомлення видалено';
+  message.text = '';
   message.isPinned = false;
   message.pinnedAt = null;
 

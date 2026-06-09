@@ -1,3 +1,5 @@
+import { getTheme } from '../../../styles/theme';
+
 const FIXED_EMOJIS = [
   '👍',
   '❤️',
@@ -20,11 +22,11 @@ type Props = {
 };
 
 export function ReactionPicker({ isDark, onSelect, onClose }: Props) {
+  const t = getTheme(isDark);
+
   return (
     <div
-      className={`absolute top-6 left-0 z-10 rounded-lg shadow-xl p-2 border ${
-        isDark ? 'bg-[#2b2d31] border-[#1e1f22]' : 'bg-white border-gray-200'
-      }`}
+      className={`absolute top-6 left-0 z-10 rounded-lg shadow-xl p-2 border ${t.bgSecondary} ${t.border}`}
     >
       <div className="flex gap-1 mb-2">
         {FIXED_EMOJIS.map((emoji) => (
