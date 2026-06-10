@@ -7,6 +7,7 @@ import type { UserProfile } from '../../../types/user';
 import { Avatar } from './Avatar';
 import { getTheme } from '../../../styles/theme';
 import { useTranslation } from 'react-i18next';
+import { Icons } from '../../icons/icons';
 
 // const COLORS = [
 //   'text-[#5DCAA5]',
@@ -191,7 +192,7 @@ export function MessageItem({
               className="text-[10px] text-[#5865f2]"
               title={t('messages.system.pinned')}
             >
-              📌
+              <Icons.pin className="w-4 h-4 text-red-500" />
             </span>
           )}
 
@@ -215,7 +216,9 @@ export function MessageItem({
                 className="text-sm"
                 title={t('messages.actions.react')}
               >
-                😊
+                <Icons.react
+                  className={`w-4 h-4 ${theme.iconDefault} ${theme.iconHover} transition-colors`}
+                />
               </button>
 
               <button
@@ -229,7 +232,7 @@ export function MessageItem({
                 className={`text-xs px-1 ${isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
                 title={t('messages.actions.reply')}
               >
-                ↩
+                <Icons.reply className={`w-4 h-4 ${theme.iconDefault} ${theme.iconHover} transition-colors`} />
               </button>
 
               {/* меню — три крапки */}
@@ -239,7 +242,7 @@ export function MessageItem({
                   className={`text-xs px-1 ${isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
                   title={t('messages.actions.more')}
                 >
-                  ···
+                  <Icons.more className={`w-4 h-4 ${theme.iconDefault} ${theme.iconHover} transition-colors`} />
                 </button>
                 {showMenu && (
                   <div
@@ -252,9 +255,10 @@ export function MessageItem({
                           setEditText(message.text);
                           setShowMenu(false);
                         }}
-                        className={`w-full text-left px-3 py-1.5 text-sm ${theme.textSecondary} ${theme.bgHover}`}
+                        className={`w-full flex items-center gap-2 text-left px-3 py-1.5 text-sm ${theme.textSecondary} ${theme.bgHover}`}
                       >
-                        ✏️ {t('messages.actions.edit')}
+                        <Icons.edit className="w-4 h-4" />
+                        {t('messages.actions.edit')}
                       </button>
                     )}
                     {isOwnMessage && (
@@ -263,9 +267,10 @@ export function MessageItem({
                           onDeleteForAll(message._id);
                           setShowMenu(false);
                         }}
-                        className="w-full text-left px-3 py-1.5 text-sm text-red-400 hover:bg-red-500/10"
+                        className="w-full flex items-center gap-2 text-left px-3 py-1.5 text-sm text-red-400 hover:bg-red-500/10"
                       >
-                        🗑️ {t('messages.actions.deleteForAll')}
+                        <Icons.delete className="w-5 h-5 text-red-400" />
+                        {t('messages.actions.deleteForAll')}
                       </button>
                     )}
                     <button
@@ -273,9 +278,10 @@ export function MessageItem({
                         onDeleteForMe(message._id);
                         setShowMenu(false);
                       }}
-                      className={`w-full text-left px-3 py-1.5 text-sm ${isDark ? 'text-gray-300 hover:bg-[#35373c]' : 'text-gray-700 hover:bg-gray-100'}`}
+                      className={`w-full flex items-center gap-2 text-left px-3 py-1.5 text-sm ${isDark ? 'text-gray-300 hover:bg-[#35373c]' : 'text-gray-700 hover:bg-gray-100'}`}
                     >
-                      🙈 {t('messages.actions.deleteForMe')}
+                      <Icons.eyeOff className="w-4 h-4" />
+                      {t('messages.actions.deleteForMe')}
                     </button>
 
                     {/* ← pin кнопка тут, всередині меню */}
@@ -284,11 +290,19 @@ export function MessageItem({
                         onPin(message._id, message.isPinned);
                         setShowMenu(false);
                       }}
-                      className={`w-full text-left px-3 py-1.5 text-sm ${isDark ? 'text-gray-300 hover:bg-[#35373c]' : 'text-gray-700 hover:bg-gray-100'}`}
+                      className={`w-full flex items-center gap-2 text-left px-3 py-1.5 text-sm ${isDark ? 'text-gray-300 hover:bg-[#35373c]' : 'text-gray-700 hover:bg-gray-100'}`}
                     >
-                      {message.isPinned
-                        ? `📌 ${t('messages.actions.unpin')}`
-                        : `📌 ${t('messages.actions.pin')}`}
+                      {message.isPinned ? (
+                        <>
+                          <Icons.unpin className="w-4 h-4" />
+                          {t('messages.actions.unpin')}
+                        </>
+                      ) : (
+                        <>
+                          <Icons.pin className="w-4 h-4" />
+                          {t('messages.actions.pin')}
+                        </>
+                      )}
                     </button>
                   </div>
                 )}

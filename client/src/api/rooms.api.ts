@@ -68,3 +68,35 @@ export async function leaveRoom(token: string, roomId: string): Promise<Room> {
 
   return res.json();
 }
+
+export async function deleteRoom(token: string, roomId: string): Promise<void> {
+  const res = await fetchWithAuth(
+    `${API_URL}/rooms/${roomId}`,
+    { method: 'DELETE' },
+    token,
+  );
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message);
+  }
+}
+
+export async function updateRoom(
+  token: string,
+  roomId: string,
+  description: string,
+): Promise<Room> {
+  const res = await fetchWithAuth(
+    `${API_URL}/rooms/${roomId}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({ description }),
+    },
+    token,
+  );
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message);
+  }
+  return res.json();
+}

@@ -3,7 +3,7 @@ import cat404 from '../assets/cat404.json';
 import { Link } from 'react-router-dom';
 import { useThemeContext } from '../context/ThemeContext';
 import { getTheme } from '../styles/theme';
-import { ThemeToggle } from '../components/Chat/components/ThemeToggle';
+import { ThemeToggle } from '../components/ThemeToggle';
 import { LangToggle } from '../components/LangToggle';
 import { useTranslation } from 'react-i18next';
 

@@ -1,6 +1,5 @@
 export const en = {
   translation: {
-
     auth: {
       email: 'EMAIL',
       password: 'PASSWORD',
@@ -308,6 +307,37 @@ export const en = {
       passwordEmpty: 'Password cannot be empty',
       oldPasswordRequired: 'Old password is required',
       passwordMismatch: 'New password must be different from old password',
+    },
+
+    room: {
+      left: 'You left the room',
+      leaveError: 'Failed to leave the room',
+
+      deleted: 'Room deleted',
+      deleteError: 'Failed to delete the room',
+    },
+
+    roomInfo: {
+      title: 'About room',
+
+      room: 'ROOM',
+      description: 'DESCRIPTION',
+      created: 'CREATED',
+      members: 'MEMBERS',
+
+      you: 'you',
+
+      leave: 'Leave room',
+
+      deleteRoom: 'Delete room',
+
+      deleteConfirm: 'Delete room',
+      irreversible: 'This action cannot be undone.',
+      descriptionUpdateError: 'Failed to update description',
+
+      delete: 'Delete',
+      cancel: 'Cancel',
+      save: 'Save',
     },
 
     lang: {

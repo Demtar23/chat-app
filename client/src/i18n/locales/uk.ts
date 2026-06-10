@@ -1,6 +1,5 @@
 export const uk = {
   translation: {
-
     auth: {
       email: 'EMAIL',
       password: 'PASSWORD',
@@ -310,6 +309,37 @@ export const uk = {
       passwordEmpty: 'Пароль не може бути порожнім',
       oldPasswordRequired: 'Поточний пароль обовʼязковий',
       passwordMismatch: 'Новий пароль має відрізнятись від старого',
+    },
+
+    room: {
+      left: 'Ви вийшли з кімнати',
+      leaveError: 'Не вдалося вийти з кімнати',
+
+      deleted: 'Кімнату видалено',
+      deleteError: 'Не вдалося видалити кімнату',
+    },
+
+    roomInfo: {
+      title: 'Про кімнату',
+
+      room: 'КІМНАТА',
+      description: 'ОПИС',
+      created: 'СТВОРЕНО',
+      members: 'УЧАСНИКИ',
+
+      you: 'ти',
+
+      leave: 'Вийти з кімнати',
+
+      deleteRoom: 'Видалити кімнату',
+
+      deleteConfirm: 'Видалити кімнату',
+      irreversible: 'Це незворотньо.',
+      descriptionUpdateError: 'Не вдалося оновити опис',
+
+      delete: 'Видалити',
+      cancel: 'Скасувати',
+      save: 'Зберегти',
     },
 
     lang: {

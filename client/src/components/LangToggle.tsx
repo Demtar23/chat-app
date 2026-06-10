@@ -23,7 +23,7 @@ export function LangToggle() {
       }`}
       title={t('theme.lang')}
     >
-      {current.toUpperCase()}
+      {current === 'uk' ? 'UA' : 'EN'}
     </button>
   );
 }

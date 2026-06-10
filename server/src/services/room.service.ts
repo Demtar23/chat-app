@@ -41,6 +41,18 @@ async function isRoomMember(roomId: string, userId: string) {
   return room?.members.includes(userId) ?? false;
 }
 
+async function deleteRoom(roomId: string) {
+  return Room.findByIdAndDelete(roomId);
+}
+
+async function updateRoom(roomId: string, description: string) {
+  return Room.findByIdAndUpdate(
+    roomId,
+    { description },
+    { returnDocument: 'after' },
+  );
+}
+
 export const roomsService = {
   createRoom,
   getAllRooms,
@@ -49,4 +61,6 @@ export const roomsService = {
   joinRoom,
   leaveRoom,
   isRoomMember,
+  deleteRoom,
+  updateRoom,
 };

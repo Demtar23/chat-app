@@ -19,7 +19,7 @@ import type { Message, ReplyTo } from '../types/message';
 import type { OnlineUser } from '../types/socket';
 import type { Room } from '../types/room';
 import type { ActiveChat } from '../types/chat';
-import { fetchRooms, joinRoom } from '../api/rooms.api';
+import { deleteRoom, fetchRooms, joinRoom, leaveRoom } from '../api/rooms.api';
 import type { UserProfile } from '../types/user';
 import { fetchAllUsers, fetchMe } from '../api/users.api';
 import { ReplyPreview } from '../components/Chat/components/ReplyPreview';
@@ -33,6 +33,8 @@ import { SearchResults } from '../components/Chat/components/SearchResults';
 import { getTheme } from '../styles/theme';
 import { useThemeContext } from '../context/ThemeContext';
 import { useTranslation } from 'react-i18next';
+import { RoomInfoPanel } from '../components/Chat/components/RoomInfoPanel';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 function getActiveChatKey(c: ActiveChat): string {
   if (c.type === 'global') return 'global';
@@ -87,9 +89,19 @@ export function ChatPage() {
 
   const sendingFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const [isRoomInfoOpen, setIsRoomInfoOpen] = useState(false);
+
   const theme = getTheme(isDark);
 
   const { t } = useTranslation();
+
+  const breakpoint = useBreakpoint();
+  const isMobile = breakpoint === 'mobile';
+  const isTablet = breakpoint === 'tablet';
+
+  // тип активної панелі на мобільному
+  type MobileView = 'sidebar' | 'chat' | 'roomInfo';
+  const [mobileView, setMobileView] = useState<MobileView>('chat');
 
   const clearSendingFallback = useCallback(() => {
     if (sendingFallbackRef.current) {
@@ -235,6 +247,58 @@ export function ChatPage() {
     };
   }, [accessToken, activeChat]);
 
+  function handleSelectGlobal() {
+    setActiveChat({ type: 'global' });
+    setIsRoomInfoOpen(false);
+    if (isMobile) setMobileView('chat');
+  }
+
+  function isUserInRoom(roomId: string) {
+    const room = rooms.find((r) => r._id === roomId);
+    return room?.members.includes(user!.id);
+  }
+
+  async function handleLeaveRoom(roomId: string) {
+    if (!accessToken) return;
+    try {
+      await leaveRoom(accessToken, roomId);
+      // НЕ видаляємо зі списку — room:updated оновить members
+      setActiveChat({ type: 'global' });
+      setIsRoomInfoOpen(false);
+      if (isMobile) setMobileView('chat');
+      notify.success(t('room.left'));
+    } catch {
+      notify.error(t('room.leaveError'));
+    }
+  }
+
+  async function handleDeleteRoom(roomId: string) {
+    if (!accessToken) return;
+    try {
+      await deleteRoom(accessToken, roomId);
+      // room:deleted прийде через socket і оновить стан
+      notify.success(t('room.deleted'));
+    } catch {
+      notify.error(t('room.deleteError'));
+    }
+  }
+
+  function handleOpenRoomInfo() {
+    setIsRoomInfoOpen((prev) => !prev);
+    if (isMobile) setMobileView('roomInfo');
+  }
+
+  function handleCloseRoomInfo() {
+    setIsRoomInfoOpen(false);
+    if (isMobile) setMobileView('chat');
+  }
+
+  // активна кімната для панелі
+  const activeRoom =
+    activeChat.type === 'room'
+      ? (rooms.find((r) => r._id === activeChat.roomId) ?? null)
+      : null;
+
   // socket слухачі
   useEffect(() => {
     if (!accessToken) {
@@ -256,7 +320,34 @@ export function ChatPage() {
     }
 
     socket.on('room:created', (room: Room) => {
-      setRooms((prev) => [...prev, room]);
+      setRooms((prev) => {
+        const exists = prev.find((r) => r._id === room._id);
+        if (exists) return prev;
+        // додаємо і сортуємо по createdAt desc
+        return [...prev, room].sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        );
+      });
+    });
+
+    socket.on('room:updated', (updatedRoom: Room) => {
+      setRooms((prev) =>
+        prev.map((r) => (r._id === updatedRoom._id ? updatedRoom : r)),
+      );
+    });
+
+    socket.on('room:deleted', ({ roomId }: { roomId: string }) => {
+      setRooms((prev) => prev.filter((r) => r._id !== roomId));
+      // якщо були в цій кімнаті — перейти в global
+      setActiveChat((prev) => {
+        if (prev.type === 'room' && prev.roomId === roomId) {
+          if (isMobile) setMobileView('chat');
+          return { type: 'global' };
+        }
+        return prev;
+      });
+      setIsRoomInfoOpen(false);
     });
 
     socket.on('receive_message', (message: Message) => {
@@ -458,6 +549,8 @@ export function ChatPage() {
       socket.off('user:updated');
       socket.off('online_users:request');
       socket.off('user:new');
+      socket.off('room:updated');
+      socket.off('room:deleted');
     };
   }, [accessToken, activeChat, user?.id, clearSendingFallback]);
 
@@ -514,21 +607,18 @@ export function ChatPage() {
 
   // приєднатись до кімнати через socket при виборі
   async function handleSelectRoom(roomId: string, roomName: string) {
-    if (!accessToken) {
-      return;
-    }
-
     const socket = getSocket();
 
-    // якщо не є членом — приєднатись
-    const room = rooms.find((r) => r._id === roomId);
-    if (room && !room.members.includes(user!.id)) {
-      const updated = await joinRoom(accessToken, roomId);
+    if (!isUserInRoom(roomId)) {
+      const updated = await joinRoom(accessToken!, roomId);
+
       setRooms((prev) => prev.map((r) => (r._id === roomId ? updated : r)));
     }
 
     socket?.emit('room:join', roomId);
+
     setActiveChat({ type: 'room', roomId, roomName });
+    if (isMobile) setMobileView('chat');
   }
 
   function sendMessage(text: string) {
@@ -819,144 +909,202 @@ export function ChatPage() {
         onSearchClose={handleSearchClose}
         query={searchQuery}
         onQueryChange={setSearchQuery}
-      />
-      <div className="flex flex-1 overflow-hidden min-h-0">
-        <Sidebar
-          isDark={isDark}
-          onlineUsers={onlineUsers}
-          allUsers={allUsers}
-          rooms={rooms}
-          activeChat={activeChat}
-          currentUserId={user.id}
-          onSelectGlobal={() => setActiveChat({ type: 'global' })}
-          onSelectRoom={handleSelectRoom}
-          onSelectPrivate={(userId, username) =>
-            setActiveChat({ type: 'private', userId, username })
+        activeChat={activeChat}
+        onOpenRoomInfo={handleOpenRoomInfo}
+        isRoomInfoOpen={isRoomInfoOpen}
+        // мобільна навігація
+        isMobile={isMobile}
+        mobileView={mobileView}
+        onMobileBack={() => {
+          if (mobileView === 'roomInfo') {
+            setMobileView('chat');
+            setIsRoomInfoOpen(false);
+          } else {
+            setMobileView('sidebar');
           }
-          onCreateRoom={() => setShowCreateRoom(true)}
-          isRoomsLoading={isRoomsLoading}
-        />
-        <div className="chat-main-panel relative flex flex-col flex-1 overflow-hidden min-h-0">
-          {isSocketDisconnected && (
-            <AppLoader
-              variant="overlay"
-              label={t('app.reconnecting')}
-            />
-          )}
-          {isMessagesLoading ? (
-            <PinnedMessageBarSkeleton isDark={isDark} />
-          ) : (
-            showPinnedBar && (
-              <PinnedMessageBar
-                pinnedMessages={pinnedMessages}
-                isDark={isDark}
-                onScrollToMessage={scrollToMessage}
-                onUnpin={handleUnpinFromBar}
-                currentIndex={activePinnedIndex}
-              />
-            )
-          )}
+        }}
+        onOpenSidebar={() => setMobileView('sidebar')}
+      />
 
-          {searchQuery.length >= 2 && (
-            <SearchResults
-              results={searchResults}
-              query={searchQuery}
-              isSearching={isSearching}
-              isDark={isDark}
-              onResultClick={scrollToMessage}
-              onClose={handleSearchClose}
-            />
-          )}
-          <MessageList
-            messages={messages}
+      <div className="flex flex-1 overflow-hidden min-h-0">
+        {/* Sidebar — desktop: завжди; tablet: завжди; mobile: тільки sidebar view */}
+        {(!isMobile || mobileView === 'sidebar') && (
+          <Sidebar
             isDark={isDark}
+            onlineUsers={onlineUsers}
+            allUsers={allUsers}
+            rooms={rooms}
             activeChat={activeChat}
             currentUserId={user.id}
-            onReact={handleReact}
-            onEdit={handleEdit}
-            onDeleteForAll={handleDeleteForAll}
-            onDeleteForMe={handleDeleteForMe}
-            onReply={setReplyTo}
-            onPin={handlePin}
-            highlightedId={highlightedId}
-            onScrollToMessage={scrollToMessage}
-            pinnedMessageIds={pinnedMessages.map((m) => m._id)}
-            onActivePinChange={setActivePinnedIndex}
-            isLoading={isMessagesLoading}
-            allUsers={allUsers}
-            onUserHover={(user, position) => {
-              if (hoverTimeoutRef.current) {
-                clearTimeout(hoverTimeoutRef.current);
-              }
-
-              setHoveredUser(user);
-              setHoverPosition(position);
+            onSelectGlobal={handleSelectGlobal}
+            onSelectRoom={(roomId, roomName) => {
+              handleSelectRoom(roomId, roomName);
+              setIsRoomInfoOpen(false);
             }}
-            onUserLeave={() => {
-              hoverTimeoutRef.current = setTimeout(() => {
-                setHoveredUser(null);
-              }, 150);
+            onSelectPrivate={(userId, username) => {
+              setActiveChat({ type: 'private', userId, username });
+              setIsRoomInfoOpen(false);
+              if (isMobile) setMobileView('chat');
             }}
-            onOpenProfile={openProfile}
-            hasMore={hasMore}
-            isLoadingMore={isLoadingMore}
-            onLoadMore={loadMore}
-            chatKey={getActiveChatKey(activeChat)}
-            isNavigatingRef={isNavigatingRef}
+            onCreateRoom={() => setShowCreateRoom(true)}
+            isRoomsLoading={isRoomsLoading}
+            // на мобільному sidebar займає весь екран
+            fullWidth={isMobile}
           />
-          <TypingIndicator typingUsers={typingUsers} isDark={isDark} />
+        )}
 
-          {replyTo && (
-            <ReplyPreview
-              replyTo={replyTo}
+        {/* Chat panel — desktop/tablet: завжди; mobile: тільки chat view */}
+        {(!isMobile || mobileView === 'chat') && (
+          // на tablet якщо roomInfo відкрита — ховаємо chat
+          <div
+            className={`chat-main-panel relative flex flex-col flex-1 overflow-hidden min-h-0 ${
+              isTablet && isRoomInfoOpen ? 'hidden' : ''
+            }`}
+          >
+            {isSocketDisconnected && (
+              <AppLoader variant="overlay" label={t('app.reconnecting')} />
+            )}
+            {isMessagesLoading ? (
+              <PinnedMessageBarSkeleton isDark={isDark} />
+            ) : (
+              showPinnedBar && (
+                <PinnedMessageBar
+                  pinnedMessages={pinnedMessages}
+                  isDark={isDark}
+                  onScrollToMessage={scrollToMessage}
+                  onUnpin={handleUnpinFromBar}
+                  currentIndex={activePinnedIndex}
+                />
+              )
+            )}
+            {searchQuery.length >= 2 && (
+              <SearchResults
+                results={searchResults}
+                query={searchQuery}
+                isSearching={isSearching}
+                isDark={isDark}
+                onResultClick={scrollToMessage}
+                onClose={handleSearchClose}
+              />
+            )}
+            <MessageList
+              messages={messages}
               isDark={isDark}
-              onCancel={() => setReplyTo(null)}
+              activeChat={activeChat}
+              currentUserId={user.id}
+              onReact={handleReact}
+              onEdit={handleEdit}
+              onDeleteForAll={handleDeleteForAll}
+              onDeleteForMe={handleDeleteForMe}
+              onReply={setReplyTo}
+              onPin={handlePin}
+              highlightedId={highlightedId}
+              onScrollToMessage={scrollToMessage}
+              pinnedMessageIds={pinnedMessages.map((m) => m._id)}
+              onActivePinChange={setActivePinnedIndex}
+              isLoading={isMessagesLoading}
+              allUsers={allUsers}
+              onUserHover={(user, position) => {
+                if (hoverTimeoutRef.current)
+                  clearTimeout(hoverTimeoutRef.current);
+                setHoveredUser(user);
+                setHoverPosition(position);
+              }}
+              onUserLeave={() => {
+                hoverTimeoutRef.current = setTimeout(
+                  () => setHoveredUser(null),
+                  150,
+                );
+              }}
+              onOpenProfile={openProfile}
+              hasMore={hasMore}
+              isLoadingMore={isLoadingMore}
+              onLoadMore={loadMore}
+              chatKey={getActiveChatKey(activeChat)}
+              isNavigatingRef={isNavigatingRef}
+            />
+            <TypingIndicator typingUsers={typingUsers} isDark={isDark} />
+            {replyTo && (
+              <ReplyPreview
+                replyTo={replyTo}
+                isDark={isDark}
+                onCancel={() => setReplyTo(null)}
+              />
+            )}
+            <MessageInput
+              key={
+                activeChat.type === 'global'
+                  ? 'global'
+                  : activeChat.type === 'room'
+                    ? activeChat.roomId
+                    : activeChat.userId
+              }
+              onSend={sendMessage}
+              isDark={isDark}
+              activeChat={activeChat}
+              isSending={isSending}
+              isSocketDisconnected={isSocketDisconnected}
+            />
+          </div>
+        )}
+
+        {/* RoomInfoPanel:
+          desktop — поруч з chat
+          tablet — замінює chat (повна ширина)
+          mobile — окремий view */}
+        {isRoomInfoOpen &&
+          activeRoom &&
+          (!isMobile || mobileView === 'roomInfo') && (
+            <RoomInfoPanel
+              key={activeRoom.description}
+              room={activeRoom}
+              isDark={isDark}
+              allUsers={allUsers}
+              currentUserId={user.id}
+              onClose={handleCloseRoomInfo}
+              onLeave={handleLeaveRoom}
+              onJoin={(roomId) => handleSelectRoom(roomId, activeRoom.name)}
+              onDelete={handleDeleteRoom}
+              onUserHover={(userProfile, position) => {
+                if (hoverTimeoutRef.current)
+                  clearTimeout(hoverTimeoutRef.current);
+                setHoveredUser(userProfile);
+                setHoverPosition(position);
+              }}
+              onUserLeave={() => {
+                hoverTimeoutRef.current = setTimeout(
+                  () => setHoveredUser(null),
+                  150,
+                );
+              }}
+              onOpenProfile={openProfile}
+              // на tablet займає весь простір
+              fullWidth={isTablet || isMobile}
             />
           )}
-          <MessageInput
-            key={
-              activeChat.type === 'global'
-                ? 'global'
-                : activeChat.type === 'room'
-                  ? activeChat.roomId
-                  : activeChat.userId
-            }
-            onSend={sendMessage}
-            isDark={isDark}
-            activeChat={activeChat}
-            isSending={isSending}
-            isSocketDisconnected={isSocketDisconnected}
-          />
-        </div>
       </div>
 
+      {/* решта модалок без змін */}
       {showCreateRoom && (
         <CreateRoomModal
           isDark={isDark}
           accessToken={accessToken}
           onClose={() => setShowCreateRoom(false)}
           onCreated={(room) => {
-            setRooms((prev) => [...prev, room]);
             setShowCreateRoom(false);
+            handleSelectRoom(room._id, room.name);
           }}
         />
       )}
 
-      {hoveredUser && hoverPosition && (
+      {hoveredUser && hoverPosition && !isMobile && (
         <div
           className="fixed z-[999]"
-          style={{
-            left: hoverPosition.x,
-            top: hoverPosition.y,
-          }}
+          style={{ left: hoverPosition.x, top: hoverPosition.y }}
           onMouseEnter={() => {
-            if (hoverTimeoutRef.current) {
-              clearTimeout(hoverTimeoutRef.current);
-            }
+            if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
           }}
-          onMouseLeave={() => {
-            setHoveredUser(null);
-          }}
+          onMouseLeave={() => setHoveredUser(null)}
         >
           <UserHoverCard
             user={hoveredUser}
@@ -983,11 +1131,7 @@ export function ChatPage() {
           )}
           onClose={closeProfile}
           onStartChat={(userId, username) =>
-            setActiveChat({
-              type: 'private',
-              userId,
-              username,
-            })
+            setActiveChat({ type: 'private', userId, username })
           }
           onProfileUpdate={handleProfileUpdate}
         />

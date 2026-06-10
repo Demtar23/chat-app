@@ -6,6 +6,7 @@ import { formatLastSeen } from '../../../utils/formatLastSeen';
 import { Avatar } from './Avatar';
 import { getTheme } from '../../../styles/theme';
 import { useTranslation } from 'react-i18next';
+import { Icons } from '../../icons/icons';
 
 type Props = {
   isDark: boolean;
@@ -155,7 +156,7 @@ export function ProfileModal({
                   onClick={() => setShowEdit(true)}
                   className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${theme.textSecondary} ${theme.bgHover}`}
                 >
-                  ✏️ {t('profile.edit')}
+                  <Icons.edit className="w-4 h-4" /> {t('profile.edit')}
                 </button>
                 <button
                   onClick={handleLogout}

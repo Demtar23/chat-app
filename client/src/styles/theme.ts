@@ -18,6 +18,8 @@ export type ThemeTokens = {
   brandHover: string;
   brandText: string;
   brandBorder: string;
+  iconDefault: string;
+  iconHover: string;
 };
 
 export const theme: { dark: ThemeTokens; light: ThemeTokens } = {
@@ -46,6 +48,9 @@ export const theme: { dark: ThemeTokens; light: ThemeTokens } = {
     brandHover: 'hover:bg-[#4752c4]',
     brandText: 'text-[#5865f2]',
     brandBorder: 'border-[#5865f2]',
+
+    iconDefault: 'text-[#a3a6aa]',
+    iconHover: 'hover:text-[#5865f2]',
   },
 
   light: {
@@ -73,6 +78,9 @@ export const theme: { dark: ThemeTokens; light: ThemeTokens } = {
     brandHover: 'hover:bg-[#4752c4]',
     brandText: 'text-[#5865f2]',
     brandBorder: 'border-[#5865f2]',
+
+    iconDefault: 'text-[#6b7280]',
+    iconHover: 'hover:text-[#5865f2]',
   },
 };
 

@@ -6,7 +6,7 @@ import { useFormField } from '../hooks/useFormField';
 import { registerSchema } from '../validations/auth.schema';
 import { useThemeContext } from '../context/ThemeContext';
 import { getAuthPage } from '../styles/authPageClasses';
-import { ThemeToggle } from '../components/Chat/components/ThemeToggle';
+import { ThemeToggle } from '../components/ThemeToggle';
 import { LangToggle } from '../components/LangToggle';
 import { useTranslation } from 'react-i18next';
 

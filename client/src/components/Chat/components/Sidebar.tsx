@@ -7,6 +7,7 @@ import type { UserProfile } from '../../../types/user';
 import { Avatar } from './Avatar';
 import { getTheme } from '../../../styles/theme';
 import { useTranslation } from 'react-i18next';
+import { Icons } from '../../icons/icons';
 
 type Props = {
   isDark: boolean;
@@ -20,6 +21,7 @@ type Props = {
   onSelectPrivate: (userId: string, username: string) => void;
   onCreateRoom: () => void;
   isRoomsLoading?: boolean;
+  fullWidth?: boolean;
 };
 
 export function Sidebar({
@@ -34,6 +36,7 @@ export function Sidebar({
   onSelectPrivate,
   onCreateRoom,
   isRoomsLoading = false,
+  fullWidth,
 }: Props) {
   const [openSections, setOpenSections] = useState({
     rooms: true,
@@ -64,7 +67,7 @@ export function Sidebar({
 
   return (
     <div
-      className={`w-52 border-r flex flex-col flex-shrink-0 transition-colors duration-200 ${bg} ${border}`}
+      className={`${fullWidth ? 'w-full' : 'w-52'} border-r flex flex-col flex-shrink-0 transition-colors duration-200 ${bg} ${border}`}
     >
       {/* Global */}
       <div className={`p-2 border-b ${border}`}>
@@ -74,8 +77,14 @@ export function Sidebar({
             activeChat.type === 'global' ? activeItem : hoverItem
           }`}
         >
-          <span className={textMuted}>#</span>
-          <span className={`font-medium ${textPrimary}`}>{t('sidebar.global')}</span>
+          <span className={textMuted}>
+            <Icons.hash
+              className={`w-4 h-4 ${theme.iconDefault} ${theme.iconHover} transition-colors`}
+            />
+          </span>
+          <span className={`font-medium ${textPrimary}`}>
+            {t('sidebar.global')}
+          </span>
         </button>
       </div>
 
@@ -87,7 +96,17 @@ export function Sidebar({
               onClick={() => toggleSection('rooms')}
               className={`text-[10px] tracking-widest font-medium ${textMuted} flex items-center gap-1`}
             >
-              <span>{openSections.rooms ? '▾' : '▸'}</span>
+              <span>
+                {openSections.rooms ? (
+                  <Icons.chevronDown
+                    className={`w-4 h-4 ${theme.iconDefault} ${theme.iconHover} transition-colors`}
+                  />
+                ) : (
+                  <Icons.chevronRight
+                    className={`w-4 h-4 ${theme.iconDefault} ${theme.iconHover} transition-colors`}
+                  />
+                )}
+              </span>
               {t('sidebar.rooms')}
             </button>
             <button
@@ -95,7 +114,9 @@ export function Sidebar({
               className={`text-lg leading-none ${textMuted} hover:text-white transition-colors`}
               title={t('sidebar.createRoom')}
             >
-              +
+              <Icons.plus
+                className={`w-4 h-4 ${theme.iconDefault} ${theme.iconHover} transition-colors`}
+              />
             </button>
           </div>
 
@@ -110,21 +131,33 @@ export function Sidebar({
                       {t('sidebar.noRooms')}
                     </p>
                   )}
-                  {rooms.map((room) => (
-                    <button
-                      key={room._id}
-                      onClick={() => onSelectRoom(room._id, room.name)}
-                      className={`flex items-center gap-2 px-3 py-1.5 text-sm transition-colors duration-150 ${
-                        activeChat.type === 'room' &&
-                        activeChat.roomId === room._id
-                          ? activeItem
-                          : hoverItem
-                      }`}
-                    >
-                      <span className={textMuted}>#</span>
-                      <span className={textPrimary}>{room.name}</span>
-                    </button>
-                  ))}
+                  {rooms.map((room) => {
+                    const isMember = room.members.includes(currentUserId);
+                    return (
+                      <button
+                        key={room._id}
+                        onClick={() => onSelectRoom(room._id, room.name)}
+                        className={`flex items-center gap-2 px-3 py-1.5 text-sm transition-colors duration-150 ${
+                          activeChat.type === 'room' &&
+                          activeChat.roomId === room._id
+                            ? activeItem
+                            : hoverItem
+                        }`}
+                      >
+                        <span className={textMuted}>
+                          <Icons.hash
+                            className={`w-4 h-4 ${theme.iconDefault} ${theme.iconHover} transition-colors`}
+                          />
+                        </span>
+                        <span className={textPrimary}>{room.name}</span>
+                        {!isMember && (
+                          <Icons.plus
+                            className={`w-4 h-4 ${theme.iconDefault} ${theme.iconHover} transition-colors`}
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
                 </>
               )}
             </div>
@@ -138,7 +171,17 @@ export function Sidebar({
               onClick={() => toggleSection('direct')}
               className={`text-[10px] tracking-widest font-medium ${textMuted} flex items-center gap-1`}
             >
-              <span>{openSections.direct ? '▾' : '▸'}</span>
+              <span>
+                {openSections.direct ? (
+                  <Icons.chevronDown
+                    className={`w-4 h-4 ${theme.iconDefault} ${theme.iconHover} transition-colors`}
+                  />
+                ) : (
+                  <Icons.chevronRight
+                    className={`w-4 h-4 ${theme.iconDefault} ${theme.iconHover} transition-colors`}
+                  />
+                )}
+              </span>
               {t('sidebar.direct')}
             </button>
           </div>
@@ -151,8 +194,18 @@ export function Sidebar({
                   onClick={() => toggleSection('online')}
                   className={`text-[10px] tracking-widest font-medium ${textMuted} flex items-center gap-1 px-3 mb-1`}
                 >
-                  <span>{openSections.online ? '▾' : '▸'}</span>
-                  {t('sidebar.online')} — {' '}
+                  <span>
+                    {openSections.online ? (
+                      <Icons.chevronDown
+                        className={`w-4 h-4 ${theme.iconDefault} ${theme.iconHover} transition-colors`}
+                      />
+                    ) : (
+                      <Icons.chevronRight
+                        className={`w-4 h-4 ${theme.iconDefault} ${theme.iconHover} transition-colors`}
+                      />
+                    )}
+                  </span>
+                  {t('sidebar.online')} —{' '}
                   {onlineUsers.filter((u) => u.userId !== currentUserId).length}
                 </button>
 
@@ -203,7 +256,17 @@ export function Sidebar({
                     onClick={() => toggleSection('offline')}
                     className={`text-[10px] tracking-widest font-medium ${textMuted} flex items-center gap-1 px-3 mb-1`}
                   >
-                    <span>{openSections.offline ? '▾' : '▸'}</span>
+                    <span>
+                      {openSections.offline ? (
+                        <Icons.chevronDown
+                          className={`w-4 h-4 ${theme.iconDefault} ${theme.iconHover} transition-colors`}
+                        />
+                      ) : (
+                        <Icons.chevronRight
+                          className={`w-4 h-4 ${theme.iconDefault} ${theme.iconHover} transition-colors`}
+                        />
+                      )}
+                    </span>
                     {t('sidebar.offline')} — {offlineUsers.length}
                   </button>
 

@@ -1,6 +1,7 @@
 import type { Message } from '../../../types/message';
 import { getTheme } from '../../../styles/theme';
 import { useTranslation } from 'react-i18next';
+import { Icons } from '../../icons/icons';
 
 type Props = {
   pinnedMessages: Message[];
@@ -51,14 +52,19 @@ export function PinnedMessageBar({
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className={`text-[11px] font-medium mb-0.5 ${theme.brandText}`}>
-          📌 {current.senderUsername}
+        <p
+          className={`inline-flex items-center gap-1 text-[11px] font-medium mb-0.5 ${theme.brandText}`}
+        >
+          <Icons.pin className="w-4 h-4 text-red-500" />
+          {current.senderUsername}
+
           {pinnedMessages.length > 1 && (
             <span className={`ml-1 ${theme.textFaint}`}>
               {currentIndex + 1}/{pinnedMessages.length}
             </span>
           )}
         </p>
+
         <p className={`text-xs truncate ${theme.textMuted}`}>{current.text}</p>
       </div>
 
@@ -70,7 +76,9 @@ export function PinnedMessageBar({
         className={`text-xs px-2 py-1 rounded flex-shrink-0 ${theme.textFaint} ${theme.bgHover}`}
         title={t('messages.actions.unpin')}
       >
-        ✕
+        <Icons.close
+          className={`w-4 h-4 ${theme.iconDefault} ${theme.iconHover} transition-colors`}
+        />
       </button>
     </div>
   );

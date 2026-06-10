@@ -2,9 +2,11 @@ import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { Avatar } from './Avatar';
 import { getTheme } from '../../../styles/theme';
-import { ThemeToggle } from './ThemeToggle';
+import { ThemeToggle } from '../../ThemeToggle';
 import { LangToggle } from '../../LangToggle';
 import { useTranslation } from 'react-i18next';
+import type { ActiveChat } from '../../../types/chat';
+import { Icons } from '../../icons/icons';
 
 type Props = {
   title: string;
@@ -16,6 +18,13 @@ type Props = {
   onSearchClose: () => void;
   query: string;
   onQueryChange: (value: string) => void;
+  activeChat: ActiveChat;
+  onOpenRoomInfo?: () => void;
+  isRoomInfoOpen?: boolean;
+  isMobile?: boolean;
+  mobileView?: 'sidebar' | 'chat' | 'roomInfo';
+  onMobileBack?: () => void;
+  onOpenSidebar?: () => void;
 };
 
 export function TopBar({
@@ -28,6 +37,12 @@ export function TopBar({
   onSearchClose,
   query,
   onQueryChange,
+  activeChat,
+  onOpenRoomInfo,
+  isRoomInfoOpen,
+  isMobile,
+  mobileView,
+  onOpenSidebar,
 }: Props) {
   const { user } = useAuth();
   const [searchOpen, setSearchOpen] = useState(false);
@@ -72,14 +87,29 @@ export function TopBar({
     >
       {!searchOpen && (
         <div className="flex items-center gap-2 flex-shrink-0">
+          {/* бургер — тільки на мобільному в chat/roomInfo view */}
+          {isMobile && mobileView !== 'sidebar' && (
+            <button
+              onClick={onOpenSidebar}
+              className={`p-1.5 rounded-md transition-colors ${theme.textMuted} ${theme.bgHover} mr-1`}
+              title="Меню"
+            >
+              <Icons.menu className="w-5 h-5" />
+            </button>
+          )}
+
           <span className={`font-medium text-[15px] ${theme.textPrimary}`}>
             {title}
           </span>
-          <span
-            className={`text-xs border-l pl-3 ml-1 ${theme.textMuted} ${theme.border}`}
-          >
-            {onlineCount} {t('topBar.online')}
-          </span>
+
+          {/* online count — ховаємо на мобільному щоб не переповнювати */}
+          {!isMobile && (
+            <span
+              className={`text-xs border-l pl-3 ml-1 ${theme.textMuted} ${theme.border}`}
+            >
+              {onlineCount} {t('topBar.online')}
+            </span>
+          )}
         </div>
       )}
 
@@ -87,7 +117,9 @@ export function TopBar({
         <div
           className={`flex-1 flex items-center gap-2 px-3 py-1.5 rounded-md ${theme.bgInput}`}
         >
-          <span className={`text-sm ${theme.textMuted}`}>🔍</span>
+          <span className={`text-sm ${theme.textMuted}`}>
+            <Icons.search className={`w-4 h-4 ${theme.textMuted}`} />
+          </span>
           <input
             ref={inputRef}
             value={query}
@@ -104,7 +136,9 @@ export function TopBar({
               className={`text-xs ${theme.textMuted} hover:${theme.textPrimary}`}
               title={t('topBar.clear')}
             >
-              ✕
+              <Icons.close
+                className={`w-4 h-4 ${theme.iconDefault} ${theme.iconHover} transition-colors`}
+              />
             </button>
           )}
         </div>
@@ -122,8 +156,28 @@ export function TopBar({
           }`}
           title={t('topBar.searchTitle')}
         >
-          🔍
+          <Icons.search
+            className={`w-4 h-4 ${theme.iconDefault} ${theme.iconHover} transition-colors`}
+          />
         </button>
+
+        {activeChat.type === 'room' && (
+          <button
+            onClick={onOpenRoomInfo}
+            className={`text-sm px-2 py-1.5 rounded-md transition-colors ${
+              isRoomInfoOpen
+                ? isDark
+                  ? 'bg-[#5865f2]/20 text-[#5865f2]'
+                  : 'bg-blue-50 text-blue-500'
+                : `${theme.textMuted} ${theme.bgHover}`
+            }`}
+            title="Інфо про кімнату"
+          >
+            <Icons.users
+              className={`w-4 h-4 ${theme.iconDefault} ${theme.iconHover} transition-colors`}
+            />
+          </button>
+        )}
 
         <LangToggle />
 

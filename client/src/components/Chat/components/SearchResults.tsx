@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { getTheme } from '../../../styles/theme';
 import type { Message } from '../../../types/message';
+import { Icons } from '../../icons/icons';
 
 type Props = {
   results: Message[];
@@ -70,7 +71,7 @@ export function SearchResults({
           onClick={onClose}
           className={`text-sm px-2 py-1 rounded ${theme.textMuted} ${theme.bgHover}`}
         >
-          ✕ {t('search.close')}
+          {t('search.close')}
         </button>
       </div>
 
@@ -109,7 +110,9 @@ export function SearchResults({
 
         {!isSearching && results.length === 0 && query.length >= 2 && (
           <div className="flex flex-col items-center justify-center py-12 gap-2">
-            <span className="text-2xl">🔍</span>
+            <span className="text-2xl">
+              <Icons.inbox className={`w-10 h-10 ${theme.textFaint}`} />
+            </span>
             <p className={`text-sm ${theme.textMuted}`}>
               {t('search.noResultsFor', { query })}
             </p>

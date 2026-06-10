@@ -26,3 +26,15 @@ roomRouter.post(
   authMiddleware,
   catchError(roomsController.leaveRoom),
 );
+
+roomRouter.delete(
+  '/:roomId',
+  authMiddleware,
+  catchError(roomsController.deleteRoom),
+);
+
+roomRouter.patch(
+  '/:roomId',
+  authMiddleware,
+  catchError(roomsController.updateRoom),
+);
