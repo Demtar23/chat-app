@@ -26,7 +26,6 @@ export async function fetchWithAuth(
     Authorization: `Bearer ${token}`,
   };
 
-  // не додаємо Content-Type для FormData — браузер сам додасть з boundary
   if (options.body && !isFormData) {
     headers['Content-Type'] = 'application/json';
   }

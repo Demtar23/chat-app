@@ -19,7 +19,7 @@ export async function apiRegister(
   const res = await fetch(`${API_URL}/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    credentials: 'include', // для cookie
+    credentials: 'include',
     body: JSON.stringify({ username, email, password, locale: i18n.language }),
   });
 

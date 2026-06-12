@@ -46,7 +46,6 @@ export async function uploadAvatar(
     {
       method: 'POST',
       body: formData,
-      // не додаємо Content-Type — браузер сам додасть multipart/form-data з boundary
     },
     token,
   );
