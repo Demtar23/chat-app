@@ -36,7 +36,7 @@ function AppContent() {
         <Route path="/auth/callback" element={<GoogleCallbackPage />} />
         <Route path="/auth/setup-profile" element={<SetupProfilePage />} />
         <Route
-          path="/"
+          path="/chat"
           element={
             <ProtectedRoute>
               <ChatPage />
