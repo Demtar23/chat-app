@@ -27,8 +27,8 @@ export function ResetPasswordPage() {
       await apiResetPassword(token, newPassword.value);
       notify.success(t('resetPassword.successMsg'));
       navigate('/login');
-    } catch (err) {
-      notify.error(err instanceof Error ? err.message : t('resetPassword.errorMsg'));
+    } catch {
+      notify.error(t('resetPassword.errorMsg'));
     } finally {
       setIsLoading(false);
     }
@@ -62,7 +62,9 @@ export function ResetPasswordPage() {
           </div>
 
           <button type="submit" disabled={isLoading} className={ap.submitBtn}>
-            {isLoading ? t('resetPassword.saving'): t('resetPassword.submitBtn')}
+            {isLoading
+              ? t('resetPassword.saving')
+              : t('resetPassword.submitBtn')}
           </button>
         </form>
 

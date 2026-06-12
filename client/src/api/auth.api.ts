@@ -1,4 +1,5 @@
 import { fetchWithAuth } from './fetchWithAuth';
+import i18n from '../i18n';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -19,7 +20,7 @@ export async function apiRegister(
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include', // для cookie
-    body: JSON.stringify({ username, email, password }),
+    body: JSON.stringify({ username, email, password, locale: i18n.language }),
   });
 
   if (!res.ok) {
@@ -105,7 +106,7 @@ export async function apiForgotPassword(email: string): Promise<void> {
   const res = await fetch(`${API_URL}/auth/forgot-password`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({ email, locale: i18n.language }),
   });
 
   if (!res.ok) {

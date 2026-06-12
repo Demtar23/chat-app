@@ -41,7 +41,7 @@ export function RoomInfoPanel({
   const theme = getTheme(isDark);
 
   const { accessToken } = useAuth();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isEditingDesc, setIsEditingDesc] = useState(false);
@@ -53,11 +53,10 @@ export function RoomInfoPanel({
   const isMember = room.members.includes(currentUserId);
   const isOwner = room.createdBy === currentUserId;
 
-  const createdAt = new Date(room.createdAt).toLocaleDateString('uk-UA', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
+  const createdAt = new Date(room.createdAt).toLocaleDateString(
+    i18n.language === 'uk' ? 'uk-UA' : 'en-US',
+    { day: 'numeric', month: 'long', year: 'numeric' },
+  );
 
   async function handleSaveDescription() {
     if (!accessToken) return;

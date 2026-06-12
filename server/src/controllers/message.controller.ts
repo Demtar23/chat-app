@@ -196,7 +196,7 @@ async function getMessagesAround(req: Request, res: Response) {
 
   if (typeof messageId !== 'string') {
     throw new ValidationError('Invalid message id');
-  } //тимчачове рішення
+  }
 
   if (!type || !['global', 'room', 'private'].includes(type as string)) {
     throw new ValidationError('Invalid chat type');

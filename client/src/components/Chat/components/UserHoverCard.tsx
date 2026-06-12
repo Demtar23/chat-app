@@ -14,18 +14,6 @@ type Props = {
   onOpenProfile: (user: UserProfile) => void;
 };
 
-// const COLORS = [
-//   { bg: 'bg-purple-100', text: 'text-purple-800' },
-//   { bg: 'bg-teal-100', text: 'text-teal-800' },
-//   { bg: 'bg-orange-100', text: 'text-orange-800' },
-//   { bg: 'bg-blue-100', text: 'text-blue-800' },
-//   { bg: 'bg-pink-100', text: 'text-pink-800' },
-// ];
-
-// function getColor(username: string) {
-//   return COLORS[username.charCodeAt(0) % COLORS.length];
-// }
-
 export function UserHoverCard({
   user,
   isDark,
@@ -35,7 +23,6 @@ export function UserHoverCard({
   currentUserId,
   onOpenProfile,
 }: Props) {
-  // const color = getColor(user.username);
 
   const { t } = useTranslation();
   const theme = getTheme(isDark);

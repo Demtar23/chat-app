@@ -56,7 +56,6 @@ export function ProfileModal({
           className={`w-80 rounded-xl shadow-2xl overflow-hidden ${theme.bgSecondary}`}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Banner */}
           <div
             className="h-20 relative"
             style={{ backgroundColor: profile.bannerColor ?? undefined }}
@@ -66,7 +65,6 @@ export function ProfileModal({
             )}
           </div>
 
-          {/* Avatar */}
           <div className="px-4 pb-3">
             <div className="flex items-end justify-between -mt-8 mb-3">
               <div className="relative">
@@ -95,7 +93,6 @@ export function ProfileModal({
             </p>
           </div>
 
-          {/* Info */}
           <div
             className={`mx-4 mb-3 rounded-lg p-3 flex flex-col gap-3 ${theme.bgPrimary}`}
           >
@@ -148,7 +145,6 @@ export function ProfileModal({
             )}
           </div>
 
-          {/* Actions */}
           <div className="px-4 pb-3 flex flex-col gap-1">
             {isOwnProfile ? (
               <>

@@ -63,7 +63,6 @@ async function uploadAvatarHandler(req: Request, res: Response) {
   const updated = await userService.updateUser(id, { avatar: avatarUrl });
   if (!updated) throw new NotFoundError('User not found');
 
-  // сповістити всіх через socket
   const io = getIo();
   io?.emit('user:updated', {
     _id: updated._id.toString(),

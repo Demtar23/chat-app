@@ -1,5 +1,4 @@
 import 'express';
-import { string } from 'zod';
 
 declare global {
   namespace Express {

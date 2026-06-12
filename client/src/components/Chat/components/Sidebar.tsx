@@ -69,7 +69,6 @@ export function Sidebar({
     <div
       className={`${fullWidth ? 'w-full' : 'w-52'} border-r flex flex-col flex-shrink-0 transition-colors duration-200 ${bg} ${border}`}
     >
-      {/* Global */}
       <div className={`p-2 border-b ${border}`}>
         <button
           onClick={onSelectGlobal}
@@ -89,7 +88,6 @@ export function Sidebar({
       </div>
 
       <div className="flex-1 overflow-y-auto py-2 flex flex-col gap-2">
-        {/* Rooms */}
         <div>
           <div className="flex items-center justify-between px-3 mb-1">
             <button
@@ -164,7 +162,6 @@ export function Sidebar({
           )}
         </div>
 
-        {/* Direct Messages */}
         <div>
           <div className="px-3 mb-1">
             <button
@@ -188,7 +185,6 @@ export function Sidebar({
 
           {openSections.direct && (
             <div className="flex flex-col gap-1">
-              {/* Online */}
               <div>
                 <button
                   onClick={() => toggleSection('online')}
@@ -249,7 +245,6 @@ export function Sidebar({
                     })}
               </div>
 
-              {/* Offline */}
               {offlineUsers.length > 0 && (
                 <div className={`border-t ${border} pt-1`}>
                   <button

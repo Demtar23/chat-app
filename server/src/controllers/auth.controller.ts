@@ -19,6 +19,7 @@ const COOKIE_OPTIONS = {
 
 async function register(req: Request, res: Response) {
   const { username, email, password } = req.body;
+  const locale = req.body.locale === 'uk' ? 'uk' : 'en';
 
   const isExistUsername = await usersService.findUserByUsername(username);
 
@@ -34,7 +35,7 @@ async function register(req: Request, res: Response) {
 
   const user = await usersService.createUser(username, email, password);
 
-  await mailer.sendActivationLink(email, user.emailVerificationToken!);
+  await mailer.sendActivationLink(email, user.emailVerificationToken!, locale);
 
   return res.status(201).json({
     message:
@@ -170,11 +171,12 @@ async function logout(req: Request, res: Response) {
 async function forgotPassword(req: Request, res: Response) {
   const { email } = req.body;
 
+  const locale = req.body.locale === 'uk' ? 'uk' : 'en';
+
   const result = await usersService.requestPasswordReset(email);
 
-  // завжди повертаємо 200 щоб не розкривати чи існує email
   if (result) {
-    await mailer.sendResetLink(result.user.email, result.resetToken);
+    await mailer.sendResetLink(result.user.email, result.resetToken, locale);
   }
 
   return res.status(200).json({
@@ -238,7 +240,6 @@ async function setupProfile(req: Request, res: Response) {
     tokenData.avatar,
   );
 
-  // емітимо нового юзера всім клієнтам
   const io = getIo();
   io?.emit('user:new', {
     _id: user._id.toString(),
@@ -273,7 +274,6 @@ async function googleRegisterCallback(req: Request, res: Response) {
     );
   }
 
-  // тут TypeScript знає що data.isNewGoogleUser === true
   const setupToken = jwt.generateSetupToken({
     email: data.email,
     avatar: data.avatar,

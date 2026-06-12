@@ -10,16 +10,6 @@ export async function fetchAllUsers(token: string): Promise<UserProfile[]> {
   return res.json();
 }
 
-export async function fetchUserById(
-  token: string,
-  userId: string,
-): Promise<UserProfile> {
-  const res = await fetchWithAuth(`${API_URL}/user/${userId}`, {}, token);
-
-  if (!res.ok) throw new Error('Failed to fetch user');
-  return res.json();
-}
-
 export async function fetchMe(token: string): Promise<UserProfile> {
   const res = await fetchWithAuth(`${API_URL}/user/me`, {}, token);
 

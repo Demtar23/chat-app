@@ -1,13 +1,14 @@
 import { notify } from '../utils/toast';
 import { apiRefresh } from './auth.api';
+import i18n from '../i18n';
 
 type RefreshCallback = (newToken: string) => void;
 
 let isRefreshing = false;
 let pendingRequests: Array<(token: string) => void> = [];
 
-// глобальний callback — встановлюється з AuthContext
 let onTokenRefreshed: RefreshCallback | null = null;
+
 
 export function setTokenRefreshCallback(cb: RefreshCallback) {
   onTokenRefreshed = cb;
@@ -51,7 +52,7 @@ export async function fetchWithAuth(
       });
     } catch {
       pendingRequests = [];
-      notify.error('Сесія закінчилась. Виконується вихід...');
+      notify.error(i18n.t('notify.sessionExpired'));
       window.location.href = '/login';
       throw new Error('Session expired');
     } finally {

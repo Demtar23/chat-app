@@ -12,38 +12,48 @@ import { GoogleCallbackPage } from './pages/GoogleCallbackPage';
 import { SetupProfilePage } from './pages/SetupProfilePage';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastWrapper } from './components/ToastWrapper';
+import { useTranslation } from 'react-i18next';
+import { useBackendHealth } from './hooks/useBackendHealth';
+import { AppLoader } from './components/AppLoader';
+
+function AppContent() {
+  const { t } = useTranslation();
+  const health = useBackendHealth();
+
+  if (health === 'loading') {
+    return <AppLoader variant="fullscreen" label={t('app.backendLoading')} />;
+  }
+
+  return (
+    <AuthProvider>
+      <ToastWrapper />
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/auth/activation/:token" element={<ActivationPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/auth/reset-password/:token" element={<ResetPasswordPage />} />
+        <Route path="/auth/callback" element={<GoogleCallbackPage />} />
+        <Route path="/auth/setup-profile" element={<SetupProfilePage />} />
+        <Route
+          path="/chat"
+          element={
+            <ProtectedRoute>
+              <ChatPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </AuthProvider>
+  );
+}
 
 function App() {
   return (
     <BrowserRouter>
       <ThemeProvider>
-        <AuthProvider>
-          <ToastWrapper />
-          <Routes>
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route
-              path="/auth/activation/:token"
-              element={<ActivationPage />}
-            />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route
-              path="/auth/reset-password/:token"
-              element={<ResetPasswordPage />}
-            />
-            <Route path="/auth/callback" element={<GoogleCallbackPage />} />
-            <Route path="/auth/setup-profile" element={<SetupProfilePage />} />
-            <Route
-              path="/chat"
-              element={
-                <ProtectedRoute>
-                  <ChatPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </AuthProvider>
+        <AppContent />
       </ThemeProvider>
     </BrowserRouter>
   );

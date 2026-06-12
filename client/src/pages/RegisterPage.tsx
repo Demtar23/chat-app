@@ -59,10 +59,8 @@ export function RegisterPage() {
     try {
       await apiRegister(username.value, email.value, password.value);
       setIsRegistered(true);
-    } catch (err) {
-      notify.error(
-        err instanceof Error ? err.message : t('registerPage.errorMsg'),
-      );
+    } catch {
+      notify.error(t('registerPage.errorMsg'));
     } finally {
       setIsLoading(false);
     }
@@ -72,9 +70,9 @@ export function RegisterPage() {
     return (
       <div className={`relative ${ap.page}`}>
         <div className="absolute top-4 right-4 flex items-center gap-2">
-        <LangToggle />
-        <ThemeToggle />
-      </div>
+          <LangToggle />
+          <ThemeToggle />
+        </div>
         <div className={ap.cardCenter}>
           <div className="text-4xl mb-4">📧</div>
           <h1 className={ap.title}>{t('registerPage.checkEmail')}</h1>

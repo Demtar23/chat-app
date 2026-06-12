@@ -8,7 +8,6 @@ export function errorMiddleware(
   res: Response,
   next: NextFunction,
 ) {
-  // кастомна помилка
   if (error instanceof AppError) {
     return res.status(error.statusCode).json({
       message: error.message,
@@ -16,7 +15,6 @@ export function errorMiddleware(
     });
   }
 
-  // Mongoose validation error
   if (error.name === 'ValidationError') {
     return res.status(400).json({
       message: error.message,
@@ -24,7 +22,6 @@ export function errorMiddleware(
     });
   }
 
-  // Mongoose duplicate key
   if ((error as NodeJS.ErrnoException).code === '11000') {
     return res.status(409).json({
       message: 'Already exists',
@@ -32,7 +29,6 @@ export function errorMiddleware(
     });
   }
 
-  // JWT помилки
   if (error.name === 'JsonWebTokenError') {
     return res.status(401).json({
       message: 'Invalid token',
@@ -61,7 +57,6 @@ export function errorMiddleware(
     });
   }
 
-  // невідома помилка
   console.error('[Server Error]', error);
 
   return res.status(500).json({

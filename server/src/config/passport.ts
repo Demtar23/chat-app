@@ -2,7 +2,6 @@ import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { User } from '../models/User';
 
-// стратегія для логіну — якщо не існує, редірект на setup
 passport.use(
   'google',
   new GoogleStrategy(
@@ -31,7 +30,6 @@ passport.use(
           });
         }
 
-        // не знайшли — редірект на setup
         return done(null, { isNewGoogleUser: true, email, avatar });
       } catch (err) {
         return done(err as Error);
@@ -40,7 +38,6 @@ passport.use(
   ),
 );
 
-// стратегія для реєстрації — якщо вже існує, повертає помилку
 passport.use(
   'google-register',
   new GoogleStrategy(
@@ -58,7 +55,6 @@ passport.use(
         const existingUser = await User.findOne({ email });
 
         if (existingUser) {
-          // акаунт вже існує — повертаємо спеціальний флаг
           return done(null, { isNewGoogleUser: false, alreadyExists: true });
         }
 

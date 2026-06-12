@@ -66,7 +66,7 @@ export function Avatar({
     <div
       className={`${s.outer} rounded-full flex items-center justify-center flex-shrink-0 font-medium ${color.bg} ${color.text} ${className}`}
     >
-      <span className={s.text}>{username.slice(0, 2).toUpperCase()}</span>
+      <span className={s.text}>{username.slice(0, 1).toUpperCase()}</span>
     </div>
   );
 }

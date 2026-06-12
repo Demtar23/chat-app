@@ -2,7 +2,7 @@ import multer from 'multer';
 import { ValidationError } from '../errors/AppError';
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_SIZE = 5 * 1024 * 1024;
 
 export const upload = multer({
   storage: multer.memoryStorage(),

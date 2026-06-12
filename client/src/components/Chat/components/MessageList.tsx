@@ -95,21 +95,15 @@ export function MessageList({
     }
   }
 
-  // оновлюємо ref в useEffect — не під час рендеру
   useEffect(() => {
     isLoadingMoreRef.current = isLoadingMore;
   }, [isLoadingMore]);
-
-  // useEffect(() => {
-  //   checkShouldLoadMore();
-  // }, [messages]);
 
   useLayoutEffect(() => {
     prevScrollHeightRef.current = containerRef.current?.scrollHeight ?? 0;
     prevFirstMessageIdRef.current = messages[0]?._id ?? '';
   });
 
-  // відновлення позиції скролу після loadMore — синхронно
   useLayoutEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -120,7 +114,6 @@ export function MessageList({
     }
   }, [messages]);
 
-  // скрол вниз при зміні чату
   useEffect(() => {
     if (isLoading) return;
     if (prevChatKeyRef.current !== chatKey) {
@@ -131,7 +124,6 @@ export function MessageList({
     }
   }, [isLoading, chatKey]);
 
-  // scroll listener
   const handleScroll = useCallback(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -150,7 +142,6 @@ export function MessageList({
     return () => container.removeEventListener('scroll', handleScroll);
   }, [handleScroll]);
 
-  // pin calculation
   useEffect(() => {
     if (isLoading) return;
     if (pinnedMessageIds.length === 0) {
@@ -165,7 +156,6 @@ export function MessageList({
       if (!container) return;
       const containerRect = container.getBoundingClientRect();
 
-      // знаходимо останнє видиме повідомлення (найнижче у viewport)
       const lastVisibleMessage = [...messages].reverse().find((m) => {
         const el = document.getElementById(`message-${m._id}`);
         if (!el) return false;
@@ -182,12 +172,10 @@ export function MessageList({
         const el = document.getElementById(`message-${id}`);
 
         if (el) {
-          // елемент в DOM — рахуємо по позиції
           const rect = el.getBoundingClientRect();
           if (rect.top < containerRect.top + 50) activeIndex = index;
         } else if (lastVisibleMessage) {
-          // елемент не в DOM — порівнюємо дати
-          // якщо закріплене старіше за останнє видиме → воно вище → вже пройдено
+
           if (
             new Date(pinnedMsg.createdAt) <=
             new Date(lastVisibleMessage.createdAt)
@@ -220,7 +208,6 @@ export function MessageList({
     }
   }, [isLoading]);
 
-  // скидати при зміні chatKey
   useEffect(() => {
     hasScrolledInitiallyRef.current = false;
   }, [chatKey]);

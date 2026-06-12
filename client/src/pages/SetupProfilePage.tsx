@@ -9,12 +9,14 @@ import { getAuthPage } from '../styles/authPageClasses';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { useTranslation } from 'react-i18next';
 import { LangToggle } from '../components/LangToggle';
+import { getTheme } from '../styles/theme';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 export function SetupProfilePage() {
   const { t } = useTranslation();
   const { isDark } = useThemeContext();
+  const theme = getTheme(isDark);
   const ap = getAuthPage(isDark);
   const [searchParams] = useSearchParams();
   const { login } = useAuth();
@@ -41,13 +43,13 @@ export function SetupProfilePage() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message ?? 'Помилка');
+      if (!res.ok) throw new Error(data.message ?? t('notify.error'));
 
       login(data.user, data.accessToken);
       navigate('/chat');
       notify.success(t('setupProfile.successMsg'));
-    } catch (err) {
-      notify.error(err instanceof Error ? err.message : t('setupProfile.errorMsg'));
+    } catch {
+      notify.error(t('setupProfile.errorMsg'));
     } finally {
       setIsLoading(false);
     }
@@ -73,7 +75,8 @@ export function SetupProfilePage() {
 
   return (
     <div className={`relative ${ap.page}`}>
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 flex items-center gap-2">
+        <LangToggle />
         <ThemeToggle />
       </div>
       <div className={ap.card}>
@@ -83,7 +86,7 @@ export function SetupProfilePage() {
           {t('setupProfile.subtitle')}
         </p>
         <p
-          className={`text-xs mb-6 text-center ${isDark ? 'text-gray-600' : 'text-gray-400'}`}
+          className={`text-xs mb-6 text-center ${theme.textFaintest}`}
         >
           {t('setupProfile.warning')}
         </p>

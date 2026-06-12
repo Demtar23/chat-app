@@ -22,7 +22,7 @@ export function getAuthPage(isDark: boolean) {
     divider: {
       wrapper: 'relative my-5',
       line: 'absolute inset-0 flex items-center',
-      lineInner: `w-full border-t ${isDark ? 'border-gray-700' : 'border-gray-300'}`,
+      lineInner: `w-full border-t ${t.bgDivider}`,
       label: 'relative flex justify-center',
       labelInner: `px-2 text-xs ${t.bgSecondary} ${t.textFaint}`,
     },

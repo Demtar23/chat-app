@@ -32,11 +32,9 @@ export function ActivationPage() {
         notify.success(t('activation.successTitle'));
         setTimeout(() => navigate('/chat'), 1500);
       })
-      .catch((err) => {
+      .catch(() => {
         setStatus('error');
-        setErrorMessage(
-          err instanceof Error ? err.message : t('setupProfile.errorMsg'),
-        );
+        setErrorMessage(t('setupProfile.errorMsg'));
       });
   }, [token]);
 

@@ -15,8 +15,8 @@ export const registerSchema = z.object({
     .string()
     .min(8, t('validation.passwordTooShort'))
     .max(64, t('validation.passwordTooLong'))
-    .regex(/[A-Z]/, t('validation.passwordUpperCase'))
-    .regex(/[a-z]/, t('validation.passwordLowerCase'))
+    .regex(/[A-Z]/, t('validation.passwordUppercase'))
+    .regex(/[a-z]/, t('validation.passwordLowercase'))
     .regex(/[0-9]/, t('validation.passwordNumber'))
     .regex(/[^a-zA-Z0-9]/, t('validation.passwordSpecial')),
 });
@@ -33,8 +33,8 @@ export const changePasswordSchema = z
       .string()
       .min(8, t('validation.passwordTooShort'))
       .max(64, t('validation.passwordTooLong'))
-      .regex(/[A-Z]/, t('validation.passwordUpperCase'))
-      .regex(/[a-z]/, t('validation.passwordLowerCase'))
+      .regex(/[A-Z]/, t('validation.passwordUppercase'))
+      .regex(/[a-z]/, t('validation.passwordLowercase'))
       .regex(/[0-9]/, t('validation.passwordNumber'))
       .regex(/[^a-zA-Z0-9]/, t('validation.passwordSpecial')),
   })
@@ -52,8 +52,8 @@ export const resetPasswordSchema = z.object({
     .string()
     .min(8, t('validation.passwordTooShort'))
     .max(64, t('validation.passwordTooLong'))
-    .regex(/[A-Z]/, t('validation.passwordUpperCase'))
-    .regex(/[a-z]/, t('validation.passwordLowerCase'))
+    .regex(/[A-Z]/, t('validation.passwordUppercase'))
+    .regex(/[a-z]/, t('validation.passwordLowercase'))
     .regex(/[0-9]/, t('validation.passwordNumber'))
     .regex(/[^a-zA-Z0-9]/, t('validation.passwordSpecial')),
 });

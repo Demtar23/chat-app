@@ -1,5 +1,45 @@
 import nodemailer from 'nodemailer';
 
+type Locale = 'uk' | 'en';
+
+const translations = {
+  uk: {
+    activationSubject: 'Підтвердження email — ChatApp',
+    activationTitle: 'Підтвердіть вашу email-адресу',
+    activationText:
+      'Дякуємо за реєстрацію! Натисніть кнопку нижче, щоб активувати акаунт.',
+    activationButton: 'Підтвердити email',
+
+    resetSubject: 'Скидання пароля — ChatApp',
+    resetTitle: 'Скидання пароля',
+    resetText:
+      'Ми отримали запит на зміну пароля. Натисніть кнопку нижче, щоб створити новий пароль.',
+    resetButton: 'Скинути пароль',
+
+    copyLink: 'Або скопіюйте посилання:',
+    activationExpires: 'Посилання дійсне 24 години',
+    resetExpires: 'Посилання дійсне 1 годину',
+  },
+
+  en: {
+    activationSubject: 'Verify your email — ChatApp',
+    activationTitle: 'Verify your email address',
+    activationText:
+      'Thank you for registering! Click the button below to activate your account.',
+    activationButton: 'Verify email',
+
+    resetSubject: 'Reset password — ChatApp',
+    resetTitle: 'Reset password',
+    resetText:
+      'We received a request to reset your password. Click the button below to create a new password.',
+    resetButton: 'Reset password',
+
+    copyLink: 'Or copy the link:',
+    activationExpires: 'This link is valid for 24 hours',
+    resetExpires: 'This link is valid for 1 hour',
+  },
+} as const;
+
 export const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -17,160 +57,166 @@ export const send = (email: string, subject: string, html: string) => {
   });
 };
 
-export const sendActivationLink = async (email: string, activationToken: string) => {
+/**
+ * =======================
+ * ACTIVATION EMAIL
+ * =======================
+ */
+export const sendActivationLink = (
+  email: string,
+  activationToken: string,
+  locale: Locale,
+) => {
   const link = `${process.env.CLIENT_URL}/auth/activation/${activationToken}`;
 
+  const t = translations[locale];
+
+  const subject = t.activationSubject;
+
   const html = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      </head>
-      <body style="margin:0;padding:0;background:#1e1f22;font-family:'Segoe UI',Arial,sans-serif;">
-        <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 0;">
-          <tr>
-            <td align="center">
-              <table width="480" cellpadding="0" cellspacing="0"
-                style="background:#2b2d31;border-radius:12px;overflow:hidden;">
+  <body style="margin:0;background:#f5f6f8;font-family:Segoe UI,Arial,sans-serif;">
+    <table width="100%" style="padding:40px 0;">
+      <tr>
+        <td align="center">
 
-                <!-- header -->
-                <tr>
-                  <td style="background:#5865f2;padding:32px;text-align:center;">
-                    <h1 style="margin:0;color:#fff;font-size:24px;font-weight:700;letter-spacing:0.5px;">
-                      💬 ChatApp
-                    </h1>
-                  </td>
-                </tr>
+          <table width="480" style="background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
 
-                <!-- body -->
-                <tr>
-                  <td style="padding:40px 32px;">
-                    <h2 style="margin:0 0 12px;color:#fff;font-size:20px;font-weight:600;">
-                      Підтвердіть вашу email-адресу
-                    </h2>
-                    <p style="margin:0 0 24px;color:#b5bac1;font-size:15px;line-height:1.6;">
-                      Дякуємо за реєстрацію! Натисніть кнопку нижче, щоб підтвердити вашу email-адресу та активувати обліковий запис.
-                    </p>
+            <tr>
+              <td style="background:#5865f2;padding:28px;text-align:center;">
+                <h1 style="margin:0;color:white;font-size:22px;">
+                  💬 ChatApp
+                </h1>
+              </td>
+            </tr>
 
-                    <table cellpadding="0" cellspacing="0" width="100%">
-                      <tr>
-                        <td align="center" style="padding:8px 0 32px;">
-                          <a href="${link}"
-                            style="display:inline-block;padding:14px 32px;background:#5865f2;color:#fff;
-                                   text-decoration:none;border-radius:8px;font-size:15px;font-weight:600;
-                                   letter-spacing:0.3px;">
-                            Підтвердити email
-                          </a>
-                        </td>
-                      </tr>
-                    </table>
+            <tr>
+              <td style="padding:40px 32px;">
+                <h2 style="margin:0 0 12px;color:#111827;">
+                  ${t.activationTitle}
+                </h2>
 
-                    <p style="margin:0 0 8px;color:#b5bac1;font-size:13px;">
-                      Або скопіюйте посилання у браузер:
-                    </p>
-                    <p style="margin:0;padding:12px;background:#1e1f22;border-radius:6px;
-                               color:#5865f2;font-size:12px;word-break:break-all;">
-                      ${link}
-                    </p>
-                  </td>
-                </tr>
+                <p style="color:#6b7280;line-height:1.6;">
+                  ${t.activationText}
+                </p>
 
-                <!-- footer -->
-                <tr>
-                  <td style="padding:20px 32px;border-top:1px solid #1e1f22;">
-                    <p style="margin:0;color:#6d6f78;font-size:12px;text-align:center;line-height:1.5;">
-                      Посилання дійсне 24 години.<br/>
-                      Якщо ви не реєструвалися — просто ігноруйте цей лист.
-                    </p>
-                  </td>
-                </tr>
+                <div style="text-align:center;margin:24px 0;">
+                  <a href="${link}"
+                    style="background:#5865f2;color:white;
+                           padding:14px 28px;border-radius:8px;
+                           text-decoration:none;font-weight:600;display:inline-block;">
+                    ${t.activationButton}
+                  </a>
+                </div>
 
-              </table>
-            </td>
-          </tr>
-        </table>
-      </body>
-    </html>
+                <p style="color:#6b7280;font-size:13px;">
+                  ${t.copyLink}
+                </p>
+
+                <p style="color:#5865f2;font-size:12px;word-break:break-all;">
+                  ${link}
+                </p>
+
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:16px;text-align:center;border-top:1px solid #e5e7eb;">
+                <p style="color:#9ca3af;font-size:12px;margin:0;">
+                  ${t.activationExpires}
+                </p>
+              </td>
+            </tr>
+
+          </table>
+
+        </td>
+      </tr>
+    </table>
+  </body>
   `;
 
-  return send(email, 'Підтвердіть вашу email-адресу — ChatApp', html);
+  return send(email, subject, html);
 };
 
-export const sendResetLink = (email: string, resetToken: string) => {
+/**
+ * =======================
+ * RESET PASSWORD EMAIL
+ * =======================
+ */
+export const sendResetLink = (
+  email: string,
+  resetToken: string,
+  locale: Locale,
+) => {
   const link = `${process.env.CLIENT_URL}/auth/reset-password/${resetToken}`;
 
+  const t = translations[locale];
+
+  const subject = t.resetSubject;
+
   const html = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      </head>
-      <body style="margin:0;padding:0;background:#1e1f22;font-family:'Segoe UI',Arial,sans-serif;">
-        <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 0;">
-          <tr>
-            <td align="center">
-              <table width="480" cellpadding="0" cellspacing="0"
-                style="background:#2b2d31;border-radius:12px;overflow:hidden;">
+  <body style="margin:0;background:#f5f6f8;font-family:Segoe UI,Arial,sans-serif;">
+    <table width="100%" style="padding:40px 0;">
+      <tr>
+        <td align="center">
 
-                <tr>
-                  <td style="background:#ed4245;padding:32px;text-align:center;">
-                    <h1 style="margin:0;color:#fff;font-size:24px;font-weight:700;">
-                      💬 ChatApp
-                    </h1>
-                  </td>
-                </tr>
+          <table width="480" style="background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
 
-                <tr>
-                  <td style="padding:40px 32px;">
-                    <h2 style="margin:0 0 12px;color:#fff;font-size:20px;font-weight:600;">
-                      Скидання пароля
-                    </h2>
-                    <p style="margin:0 0 24px;color:#b5bac1;font-size:15px;line-height:1.6;">
-                      Ми отримали запит на скидання пароля для вашого облікового запису. Натисніть кнопку нижче, щоб створити новий пароль.
-                    </p>
+            <tr>
+              <td style="background:#ed4245;padding:28px;text-align:center;">
+                <h1 style="margin:0;color:white;font-size:22px;">
+                  💬 ChatApp
+                </h1>
+              </td>
+            </tr>
 
-                    <table cellpadding="0" cellspacing="0" width="100%">
-                      <tr>
-                        <td align="center" style="padding:8px 0 32px;">
-                          <a href="${link}"
-                            style="display:inline-block;padding:14px 32px;background:#ed4245;color:#fff;
-                                   text-decoration:none;border-radius:8px;font-size:15px;font-weight:600;">
-                            Скинути пароль
-                          </a>
-                        </td>
-                      </tr>
-                    </table>
+            <tr>
+              <td style="padding:40px 32px;">
+                <h2 style="margin:0 0 12px;color:#111827;">
+                  ${t.resetTitle}
+                </h2>
 
-                    <p style="margin:0 0 8px;color:#b5bac1;font-size:13px;">
-                      Або скопіюйте посилання у браузер:
-                    </p>
-                    <p style="margin:0;padding:12px;background:#1e1f22;border-radius:6px;
-                               color:#ed4245;font-size:12px;word-break:break-all;">
-                      ${link}
-                    </p>
-                  </td>
-                </tr>
+                <p style="color:#6b7280;line-height:1.6;">
+                  ${t.resetText}
+                </p>
 
-                <tr>
-                  <td style="padding:20px 32px;border-top:1px solid #1e1f22;">
-                    <p style="margin:0;color:#6d6f78;font-size:12px;text-align:center;line-height:1.5;">
-                      Посилання дійсне 1 годину.<br/>
-                      Якщо ви не запитували скидання пароля — просто ігноруйте цей лист.
-                    </p>
-                  </td>
-                </tr>
+                <div style="text-align:center;margin:24px 0;">
+                  <a href="${link}"
+                    style="background:#ed4245;color:white;
+                           padding:14px 28px;border-radius:8px;
+                           text-decoration:none;font-weight:600;display:inline-block;">
+                    ${t.resetButton}
+                  </a>
+                </div>
 
-              </table>
-            </td>
-          </tr>
-        </table>
-      </body>
-    </html>
+                <p style="color:#6b7280;font-size:13px;">
+                  ${t.copyLink}
+                </p>
+
+                <p style="color:#ed4245;font-size:12px;word-break:break-all;">
+                  ${link}
+                </p>
+
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:16px;text-align:center;border-top:1px solid #e5e7eb;">
+                <p style="color:#9ca3af;font-size:12px;margin:0;">
+                  ${t.resetExpires}
+                </p>
+              </td>
+            </tr>
+
+          </table>
+
+        </td>
+      </tr>
+    </table>
+  </body>
   `;
 
-  return send(email, 'Скидання пароля — ChatApp', html);
+  return send(email, subject, html);
 };
 
 export const mailer = {

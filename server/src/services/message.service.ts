@@ -55,12 +55,6 @@ async function getPrivateMessages(
     .then((messages) => messages.reverse());
 }
 
-async function getAllMessages() {
-  return Message.find().sort({
-    createdAt: 1,
-  });
-}
-
 async function toggleReaction(
   messageId: string,
   emoji: string,
@@ -134,7 +128,6 @@ async function editMessage(messageId: string, text: string, userId: string) {
     return null;
   }
 
-  // тільки власник може редагувати
   if (message.senderId !== userId) {
     return null;
   }
@@ -157,7 +150,7 @@ async function deleteMessageForAll(messageId: string, userId: string) {
   }
 
   message.isDeleted = true;
-  message.text = '';
+  message.text = 'Message deleted';
   message.isPinned = false;
   message.pinnedAt = null;
 
@@ -332,7 +325,6 @@ async function getMessagesAround(
 
 export const messagesService = {
   createMessage,
-  getAllMessages,
   getGlobalMessages,
   getRoomMessages,
   getPrivateMessages,

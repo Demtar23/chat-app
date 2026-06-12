@@ -13,6 +13,7 @@ import { apiChangePassword } from '../../../api/auth.api';
 import { useFormField } from '../../../hooks/useFormField';
 import { getTheme } from '../../../styles/theme';
 import { useTranslation } from 'react-i18next';
+import { Icons } from '../../icons/icons';
 
 const IMAGE_KIT_URL = import.meta.env.VITE_IMAGE_KIT_URL;
 
@@ -31,70 +32,27 @@ type Props = {
 };
 
 const BANNER_COLORS = [
-  '#5865f2', // Discord синій
-  '#57f287', // зелений
-  '#fee75c', // жовтий
-  '#eb459e', // рожевий
-  '#ed4245', // червоний
-  '#9b59b6', // фіолетовий
-  '#3498db', // блакитний
-  '#e67e22', // помаранчевий
-  '#1abc9c', // бірюзовий
-  '#e91e63', // малиновий
-  '#2ecc71', // смарагдовий
-  '#f39c12', // бурштиновий
-  '#16a085', // темно-бірюзовий
-  '#8e44ad', // темно-фіолетовий
-  '#c0392b', // темно-червоний
-  '#2980b9', // темно-синій
-  '#27ae60', // темно-зелений
-  '#d35400', // темно-помаранчевий
-  '#7f8c8d', // сірий
-  '#2c3e50', // темно-сланцевий
+  '#5865f2',
+  '#57f287',
+  '#fee75c',
+  '#eb459e',
+  '#ed4245',
+  '#9b59b6',
+  '#3498db',
+  '#e67e22',
+  '#1abc9c',
+  '#e91e63',
+  '#2ecc71',
+  '#f39c12',
+  '#16a085',
+  '#8e44ad',
+  '#c0392b',
+  '#2980b9',
+  '#27ae60',
+  '#d35400',
+  '#7f8c8d',
+  '#2c3e50',
 ];
-
-// const AVATAR_EMOJIS = [
-//   '🐱',
-//   '🐶',
-//   '🐺',
-//   '🦊',
-//   '🐻',
-//   '🐼',
-//   '🐨',
-//   '🐯',
-//   '🦁',
-//   '🐮',
-//   '🐸',
-//   '🐙',
-//   '🦋',
-//   '🦅',
-//   '🐉',
-//   '🦄',
-//   '🧙',
-//   '🧛',
-//   '🧜',
-//   '🧚',
-//   '👾',
-//   '🤖',
-//   '👻',
-//   '💀',
-//   '🌙',
-//   '⭐',
-//   '🔥',
-//   '💎',
-//   '🌊',
-//   '🌸',
-//   '🍀',
-//   '🎭',
-//   '🎮',
-//   '🎸',
-//   '🚀',
-//   '⚡',
-//   '🌈',
-//   '💫',
-//   '🎯',
-//   '🏆',
-// ];
 
 const AVATAR_PRESETS = [
   `${IMAGE_KIT_URL}/avatar_1.png`,
@@ -135,7 +93,7 @@ const AVATAR_PRESETS = [
 ];
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_SIZE = 5 * 1024 * 1024;
 
 type Tab = 'profile' | 'password';
 
@@ -169,7 +127,6 @@ export function EditProfileModal({
   const [avatar, setAvatar] = useState<string | null>(currentAvatar ?? null);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
 
-  // стан для завантаження фото
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
@@ -179,10 +136,8 @@ export function EditProfileModal({
   const newPassword = useFormField(changePasswordSchema.shape.newPassword);
   const [isPasswordLoading, setIsPasswordLoading] = useState(false);
 
-  // аватар завантажений через Cloudinary (наш upload)
   const isUploadedAvatar = avatar?.includes('cloudinary.com') ?? false;
 
-  // аватар з Google або ImageKit preset
   const isPresetAvatar = avatar?.startsWith('http') && !isUploadedAvatar;
 
   const theme = getTheme(isDark);
@@ -204,7 +159,6 @@ export function EditProfileModal({
     setPhotoFile(file);
     const previewUrl = URL.createObjectURL(file);
     setPhotoPreview(previewUrl);
-    // скидаємо emoji якщо вибрали фото
     setAvatar(null);
   }
 
@@ -218,7 +172,6 @@ export function EditProfileModal({
       setPhotoPreview(null);
       setPhotoFile(null);
 
-      // очищаємо input
       if (fileInputRef.current) fileInputRef.current.value = '';
 
       notify.success(t('editProfile.messages.photoUploaded'));
@@ -321,7 +274,6 @@ export function EditProfileModal({
     }
   }
 
-  // визначаємо поточний аватар для preview
   const isPhotoAvatar = avatar && avatar.startsWith('http');
 
   return (
@@ -355,7 +307,6 @@ export function EditProfileModal({
         <div className="p-6">
           {activeTab === 'profile' && (
             <form onSubmit={handleSaveProfile} className="flex flex-col gap-4">
-              {/* Bio */}
               <div className="flex flex-col gap-1.5">
                 <label
                   className={`text-xs font-medium tracking-wide ${theme.textMuted}`}
@@ -375,7 +326,6 @@ export function EditProfileModal({
                 </p>
               </div>
 
-              {/* Avatar */}
               <div className="flex flex-col gap-2">
                 <label
                   className={`text-xs font-medium tracking-wide ${theme.textMuted}`}
@@ -383,7 +333,6 @@ export function EditProfileModal({
                   {t('editProfile.avatar')}
                 </label>
 
-                {/* Preview */}
                 <div className="flex items-center gap-3">
                   {photoPreview ? (
                     <img
@@ -401,16 +350,15 @@ export function EditProfileModal({
                   )}
 
                   <div className="flex gap-2 flex-wrap">
-                    {/* кнопка вибору файлу */}
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className={`text-xs px-2.5 py-1.5 rounded-md border transition-colors ${theme.border} ${theme.textSecondary} ${theme.bgHover}`}
+                      className={`flex items-center gap-2 text-xs px-2.5 py-1.5 rounded-md border transition-colors ${theme.border} ${theme.textSecondary} ${theme.bgHover}`}
                     >
-                      📷 {t('editProfile.uploadPhoto')}
+                      <Icons.camera className="w-4 h-4" />
+                      {t('editProfile.uploadPhoto')}
                     </button>
 
-                    {/* кнопка upload якщо є preview */}
                     {photoPreview && (
                       <>
                         <button
@@ -433,19 +381,17 @@ export function EditProfileModal({
                       </>
                     )}
 
-                    {/* видалити фото якщо є URL */}
-                    {/* видалити фото — тільки для завантажених через Cloudinary */}
                     {isUploadedAvatar && !photoPreview && (
                       <button
                         type="button"
                         onClick={handleDeletePhoto}
-                        className="text-xs px-2.5 py-1.5 rounded-md text-red-400 hover:text-red-300 transition-colors"
+                        className="flex items-center gap-2 text-xs px-2.5 py-1.5 rounded-md text-red-400 hover:text-red-300 transition-colors"
                       >
+                        <Icons.delete className="w-4 h-4" />
                         {t('editProfile.deletePhoto')}
                       </button>
                     )}
 
-                    {/* скинути preset або відсутній аватар */}
                     {(isPresetAvatar ||
                       (avatar && !avatar.startsWith('http'))) &&
                       !photoPreview && (
@@ -458,7 +404,6 @@ export function EditProfileModal({
                         </button>
                       )}
 
-                    {/* скинути emoji */}
                     {avatar && !isPhotoAvatar && !photoPreview && (
                       <button
                         type="button"
@@ -471,7 +416,6 @@ export function EditProfileModal({
                   </div>
                 </div>
 
-                {/* прихований input */}
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -484,7 +428,6 @@ export function EditProfileModal({
                   {t('editProfile.avatarHint')}
                 </p>
 
-                {/* Emoji grid */}
                 {!photoPreview && (
                   <div className="flex flex-wrap gap-1.5">
                     {AVATAR_PRESETS.map((url) => (
@@ -507,7 +450,6 @@ export function EditProfileModal({
                 )}
               </div>
 
-              {/* Banner color */}
               <div className="flex flex-col gap-2">
                 <label
                   className={`text-xs font-medium tracking-wide ${theme.textMuted}`}
@@ -537,7 +479,7 @@ export function EditProfileModal({
                   <button
                     type="button"
                     onClick={() => setBannerColor(null)}
-                    className={`text-xs self-start ${isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
+                    className={`text-xs self-start ${theme.textFaint} ${theme.bgHover}`}
                   >
                     {t('editProfile.reset')}
                   </button>
@@ -565,7 +507,6 @@ export function EditProfileModal({
             </form>
           )}
 
-          {/* password tab */}
           {activeTab === 'password' && (
             <form
               onSubmit={handleChangePassword}

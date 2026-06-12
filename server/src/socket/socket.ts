@@ -33,8 +33,6 @@ export function initSocket(io: Server) {
 
     io.emit('online_users', Array.from(onlineUsers.values()));
 
-    console.log('Online users:', Array.from(onlineUsers.values()));
-
     messageHandler(io, authSocket);
     typingHandler(io, authSocket);
     roomHandler(io, authSocket);
@@ -56,8 +54,6 @@ export function initSocket(io: Server) {
       io.emit('online_users', Array.from(onlineUsers.values()));
 
       await userService.updateLastSeen(user.id);
-
-      console.log('Online users', Array.from(onlineUsers.values()));
     });
   });
 }

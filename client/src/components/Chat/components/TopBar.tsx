@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { Avatar } from './Avatar';
 import { getTheme } from '../../../styles/theme';
@@ -25,6 +25,8 @@ type Props = {
   mobileView?: 'sidebar' | 'chat' | 'roomInfo';
   onMobileBack?: () => void;
   onOpenSidebar?: () => void;
+  searchOpen: boolean;
+  onSearchOpen: () => void;
 };
 
 export function TopBar({
@@ -43,9 +45,10 @@ export function TopBar({
   isMobile,
   mobileView,
   onOpenSidebar,
+  searchOpen,
+  onSearchOpen,
 }: Props) {
   const { user } = useAuth();
-  const [searchOpen, setSearchOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const theme = getTheme(isDark);
   const { t } = useTranslation();
@@ -57,7 +60,7 @@ export function TopBar({
   function handleSearch(value: string) {
     onQueryChange(value);
     if (value.trim().length >= 2) {
-      onSearch(value.trim());
+      onSearch(value);
     } else if (value.trim().length === 0) {
       onSearchClose();
     }
@@ -65,7 +68,6 @@ export function TopBar({
 
   function handleClose() {
     onQueryChange('');
-    setSearchOpen(false);
     onSearchClose();
   }
 
@@ -73,7 +75,7 @@ export function TopBar({
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
         e.preventDefault();
-        setSearchOpen(true);
+        onSearchOpen();
       }
       if (e.key === 'Escape' && searchOpen) handleClose();
     }
@@ -87,12 +89,11 @@ export function TopBar({
     >
       {!searchOpen && (
         <div className="flex items-center gap-2 flex-shrink-0">
-          {/* бургер — тільки на мобільному в chat/roomInfo view */}
           {isMobile && mobileView !== 'sidebar' && (
             <button
               onClick={onOpenSidebar}
               className={`p-1.5 rounded-md transition-colors ${theme.textMuted} ${theme.bgHover} mr-1`}
-              title="Меню"
+              title={t('topBar.menu')}
             >
               <Icons.menu className="w-5 h-5" />
             </button>
@@ -102,14 +103,11 @@ export function TopBar({
             {title}
           </span>
 
-          {/* online count — ховаємо на мобільному щоб не переповнювати */}
-          {!isMobile && (
-            <span
-              className={`text-xs border-l pl-3 ml-1 ${theme.textMuted} ${theme.border}`}
-            >
-              {onlineCount} {t('topBar.online')}
-            </span>
-          )}
+          <span
+            className={`text-xs border-l pl-3 ml-1 ${theme.textMuted} ${theme.border}`}
+          >
+            {onlineCount} {t('topBar.online')}
+          </span>
         </div>
       )}
 
@@ -146,7 +144,7 @@ export function TopBar({
 
       <div className="flex items-center gap-2 ml-auto flex-shrink-0">
         <button
-          onClick={() => (searchOpen ? handleClose() : setSearchOpen(true))}
+          onClick={() => (searchOpen ? handleClose() : onSearchOpen())}
           className={`text-sm px-2 py-1.5 rounded-md transition-colors ${
             searchOpen
               ? isDark
@@ -171,7 +169,7 @@ export function TopBar({
                   : 'bg-blue-50 text-blue-500'
                 : `${theme.textMuted} ${theme.bgHover}`
             }`}
-            title="Інфо про кімнату"
+            title={t('topBar.infoAboutRoom')}
           >
             <Icons.users
               className={`w-4 h-4 ${theme.iconDefault} ${theme.iconHover} transition-colors`}

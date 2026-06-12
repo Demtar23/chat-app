@@ -30,9 +30,7 @@ export function ReactionPicker({ isDark, onSelect, onClose }: Props) {
   if (isMobile) {
     return (
       <>
-        {/* overlay для закриття */}
         <div className="fixed inset-0 z-40" onClick={onClose} />
-        {/* bottom sheet */}
         <div
           className={`fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl shadow-2xl p-4 border-t ${t.bgSecondary} ${t.border}`}
         >

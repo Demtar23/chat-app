@@ -1,6 +1,10 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { apiRefresh, apiLogout } from '../api/auth.api';
-import { connectSocket, disconnectSocket } from '../services/socket';
+import {
+  connectSocket,
+  disconnectSocket,
+  setTokenGetter,
+} from '../services/socket';
 import { setTokenRefreshCallback } from '../api/fetchWithAuth';
 
 type User = {
@@ -24,8 +28,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // ref щоб уникнути кількох одночасних refresh запитів
   const refreshPromiseRef = useRef<Promise<string | null> | null>(null);
+
+  useEffect(() => {
+    setTokenGetter(() => accessToken);
+  }, [accessToken]);
 
   useEffect(() => {
     apiRefresh()
@@ -38,9 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           connectSocket(newToken);
         });
       })
-      .catch((err) => {
-        console.log('Refresh failed:', err.message);
-      })
+      .catch(() => {})
       .finally(() => {
         setIsLoading(false);
       });
@@ -64,7 +69,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function refreshToken(): Promise<string | null> {
-    // якщо вже йде refresh — чекаємо його замість нового запиту
     if (refreshPromiseRef.current) {
       return refreshPromiseRef.current;
     }
@@ -77,7 +81,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return newToken;
       })
       .catch(() => {
-        // refresh провалився — логаут
         setUser(null);
         setAccessToken(null);
         disconnectSocket();

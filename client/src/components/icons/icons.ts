@@ -20,6 +20,7 @@ import {
   Crown,
   ChevronLeft,
   Menu,
+  Camera,
 } from 'lucide-react';
 
 export const Icons = {
@@ -46,6 +47,7 @@ export const Icons = {
   chevronRight: ChevronRight,
   chevronLeft: ChevronLeft,
   menu: Menu,
+  camera: Camera,
 
   sun: Sun,
   moon: Moon,

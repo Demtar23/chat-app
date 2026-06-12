@@ -283,11 +283,14 @@ export const en = {
       searchPlaceholder: 'Search messages...',
       searchTitle: 'Search',
       clear: 'Clear',
+      menu: 'Menu',
+      infoAboutRoom: 'Room information',
     },
 
     app: {
       loadingChat: 'Loading chat…',
       reconnecting: 'Reconnecting to server…',
+      backendLoading: 'Starting server... This may take up to a minute.',
     },
 
     validation: {
@@ -338,6 +341,18 @@ export const en = {
       delete: 'Delete',
       cancel: 'Cancel',
       save: 'Save',
+    },
+
+    notify: {
+      loadMessagesError: 'Failed to load messages',
+      findMessageError: 'Failed to find message',
+      searchError: 'Search failed',
+      loginSuccess: 'Logged in successfully',
+      loginFailed: 'Failed to sign in',
+      error: 'Error',
+      refreshFailed: 'Failed to refresh session',
+      sessionExpired: 'Session expired. Logging out...',
+      noServerConnection: 'No connection to server',
     },
 
     lang: {

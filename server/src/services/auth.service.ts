@@ -65,10 +65,10 @@ async function changePassword(
 
 async function requestPasswordReset(email: string) {
   const user = await User.findOne({ email });
-  if (!user) return null; // не кажемо що email не існує — безпека
+  if (!user) return null;
 
   const resetToken = crypto.randomBytes(32).toString('hex');
-  const resetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 година
+  const resetExpires = new Date(Date.now() + 60 * 60 * 1000);
 
   user.passwordResetToken = resetToken;
   user.passwordResetExpires = resetExpires;

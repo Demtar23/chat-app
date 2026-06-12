@@ -54,9 +54,9 @@ export function LoginPage() {
       const { user, accessToken } = await apiLogin(email.value, password.value);
       login(user, accessToken);
       navigate('/chat');
-      notify.success('Вхід успішний');
-    } catch (err) {
-      notify.error(err instanceof Error ? err.message : 'Не вдалося увійти');
+      notify.success(t('notify.loginSuccess'));
+    } catch {
+      notify.error(t('notify.loginFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -86,7 +86,7 @@ export function LoginPage() {
               onChange={email.onChange}
               onBlur={email.onBlur}
               className={ap.input(email.error)}
-              placeholder="your@email.com"
+              placeholder={t('loginPage.emailPlaceholder')}
               autoComplete="email"
             />
             {email.error && (
@@ -102,7 +102,7 @@ export function LoginPage() {
               onChange={password.onChange}
               onBlur={password.onBlur}
               className={ap.input(password.error)}
-              placeholder="Введи пароль"
+              placeholder={t('loginPage.passwordPlaceholder')}
               autoComplete="current-password"
             />
             {password.error && (

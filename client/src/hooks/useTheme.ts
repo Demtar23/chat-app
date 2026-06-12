@@ -17,12 +17,10 @@ export function useTheme() {
     return saved !== null ? saved : getSystemTheme();
   });
 
-  // слухаємо зміни системної теми
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
     function handleChange(e: MediaQueryListEvent) {
-      // змінюємо тільки якщо юзер не вибирав вручну
       if (getSavedTheme() === null) {
         setIsDark(e.matches);
       }

@@ -25,8 +25,8 @@ export function ForgotPasswordPage() {
     try {
       await apiForgotPassword(email.value);
       setIsSent(true);
-    } catch (err) {
-      notify.error(err instanceof Error ? err.message : t('forgotPassword.errorMsg'));
+    } catch {
+      notify.error(t('forgotPassword.errorMsg'));
     } finally {
       setIsLoading(false);
     }
@@ -36,9 +36,9 @@ export function ForgotPasswordPage() {
     return (
       <div className={`relative ${ap.page}`}>
         <div className="absolute top-4 right-4 flex items-center gap-2">
-        <LangToggle />
-        <ThemeToggle />
-      </div>
+          <LangToggle />
+          <ThemeToggle />
+        </div>
         <div className={ap.cardCenter}>
           <div className="text-4xl mb-4">📧</div>
           <h1 className={ap.title}>{t('forgotPassword.sentTitle')}</h1>
@@ -65,9 +65,7 @@ export function ForgotPasswordPage() {
       </div>
       <div className={ap.card}>
         <h1 className={ap.title}>{t('forgotPassword.title')}</h1>
-        <p className={ap.subtitle}>
-          {t('forgotPassword.subtitle')}
-        </p>
+        <p className={ap.subtitle}>{t('forgotPassword.subtitle')}</p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
@@ -87,7 +85,9 @@ export function ForgotPasswordPage() {
           </div>
 
           <button type="submit" disabled={isLoading} className={ap.submitBtn}>
-            {isLoading ? t('forgotPassword.sending') : t('forgotPassword.submitBtn')}
+            {isLoading
+              ? t('forgotPassword.sending')
+              : t('forgotPassword.submitBtn')}
           </button>
         </form>
 

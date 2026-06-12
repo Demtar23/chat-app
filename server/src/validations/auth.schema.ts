@@ -24,6 +24,8 @@ export const registerSchema = z.object({
       /[^a-zA-Z0-9]/,
       'Password must contain at least one special character',
     ),
+
+  locale: z.enum(['en', 'uk']).optional(),
 });
 
 export const loginSchema = z.object({
@@ -53,6 +55,7 @@ export const changePasswordSchema = z
 
 export const forgotPasswordSchema = z.object({
   email: z.string().trim().email('Invalid email address'),
+  locale: z.enum(['en', 'uk']).optional(),
 });
 
 export const resetPasswordSchema = z.object({

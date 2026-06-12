@@ -3,7 +3,6 @@ import { fetchWithAuth } from './fetchWithAuth';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-// cursor-based — beforeId = _id найстарішого повідомлення в списку
 export async function fetchGlobalMessages(
   token: string,
   beforeId?: string,
@@ -54,7 +53,6 @@ export async function fetchPrivateMessages(
   return res.json();
 }
 
-// завантажити повідомлення навколо конкретного (для pin/search навігації)
 export async function fetchMessagesAround(
   token: string,
   messageId: string,
@@ -72,60 +70,6 @@ export async function fetchMessagesAround(
     token,
   );
   if (!res.ok) throw new Error('Failed to fetch messages around');
-  return res.json();
-}
-
-export async function toggleReaction(
-  token: string,
-  messageId: string,
-  emoji: string,
-): Promise<Message> {
-  const res = await fetchWithAuth(
-    `${API_URL}/messages/${messageId}/react`,
-    { method: 'POST', body: JSON.stringify({ emoji }) },
-    token,
-  );
-  if (!res.ok) throw new Error('Failed to toggle reaction');
-  return res.json();
-}
-
-export async function editMessage(
-  token: string,
-  messageId: string,
-  text: string,
-): Promise<Message> {
-  const res = await fetchWithAuth(
-    `${API_URL}/messages/${messageId}`,
-    { method: 'PATCH', body: JSON.stringify({ text }) },
-    token,
-  );
-  if (!res.ok) throw new Error('Failed to edit message');
-  return res.json();
-}
-
-export async function deleteMessageForAll(
-  token: string,
-  messageId: string,
-): Promise<Message> {
-  const res = await fetchWithAuth(
-    `${API_URL}/messages/${messageId}`,
-    { method: 'DELETE' },
-    token,
-  );
-  if (!res.ok) throw new Error('Failed to delete message');
-  return res.json();
-}
-
-export async function deleteMessageForMe(
-  token: string,
-  messageId: string,
-): Promise<Message> {
-  const res = await fetchWithAuth(
-    `${API_URL}/messages/${messageId}/me`,
-    { method: 'DELETE' },
-    token,
-  );
-  if (!res.ok) throw new Error('Failed to delete message');
   return res.json();
 }
 

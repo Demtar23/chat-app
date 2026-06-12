@@ -9,26 +9,6 @@ import { getTheme } from '../../../styles/theme';
 import { useTranslation } from 'react-i18next';
 import { Icons } from '../../icons/icons';
 
-// const COLORS = [
-//   'text-[#5DCAA5]',
-//   'text-[#F0997B]',
-//   'text-[#AFA9EC]',
-//   'text-[#85B7EB]',
-//   'text-[#ED93B1]',
-// ];
-
-// const AVATAR_COLORS = [
-//   { bg: 'bg-purple-100', text: 'text-purple-800' },
-//   { bg: 'bg-teal-100', text: 'text-teal-800' },
-//   { bg: 'bg-orange-100', text: 'text-orange-800' },
-//   { bg: 'bg-blue-100', text: 'text-blue-800' },
-//   { bg: 'bg-pink-100', text: 'text-pink-800' },
-// ];
-
-// function getColorIndex(str: string) {
-//   return str.charCodeAt(0) % COLORS.length;
-// }
-
 function formatTime(date: string) {
   return new Date(date).toLocaleTimeString('uk-UA', {
     hour: '2-digit',
@@ -78,10 +58,6 @@ export function MessageItem({
 
   const pickerRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-
-  // const index = getColorIndex(message.senderUsername);
-  // const nameColor = COLORS[index];
-  // const avatarColor = AVATAR_COLORS[index];
 
   const isOwnMessage = message.senderId === currentUserId;
   const showStatus = isOwnMessage && message.type === 'private';
@@ -144,7 +120,6 @@ export function MessageItem({
     >
       <div
         onClick={() => {
-          console.log('Open profile user:', hoverUser);
           onOpenProfile(hoverUser);
         }}
         onMouseEnter={(e) => {
@@ -197,9 +172,7 @@ export function MessageItem({
           )}
 
           {message.isEdited && !isDeleted && (
-            <span
-              className={`text-[10px] ${isDark ? 'text-gray-600' : 'text-gray-400'}`}
-            >
+            <span className={`text-[10px] ${theme.textFaintest}`}>
               {t('messages.system.edited')}
             </span>
           )}
@@ -208,7 +181,6 @@ export function MessageItem({
             <MessageStatus status={message.status} isDark={isDark} />
           )}
 
-          {/* кнопки при hover */}
           {!isDeleted && (
             <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 ml-1">
               <button
@@ -229,20 +201,23 @@ export function MessageItem({
                     senderUsername: message.senderUsername,
                   })
                 }
-                className={`text-xs px-1 ${isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
+                className={`text-xs px-1 ${theme.textFaint} ${theme.bgHover}`}
                 title={t('messages.actions.reply')}
               >
-                <Icons.reply className={`w-4 h-4 ${theme.iconDefault} ${theme.iconHover} transition-colors`} />
+                <Icons.reply
+                  className={`w-4 h-4 ${theme.iconDefault} ${theme.iconHover} transition-colors`}
+                />
               </button>
 
-              {/* меню — три крапки */}
               <div className="relative" ref={menuRef}>
                 <button
                   onClick={() => setShowMenu((prev) => !prev)}
-                  className={`text-xs px-1 ${isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
+                  className={`text-xs px-1 ${theme.textFaint} ${theme.bgHover}`}
                   title={t('messages.actions.more')}
                 >
-                  <Icons.more className={`w-4 h-4 ${theme.iconDefault} ${theme.iconHover} transition-colors`} />
+                  <Icons.more
+                    className={`w-4 h-4 ${theme.iconDefault} ${theme.iconHover} transition-colors`}
+                  />
                 </button>
                 {showMenu && (
                   <div
@@ -278,19 +253,18 @@ export function MessageItem({
                         onDeleteForMe(message._id);
                         setShowMenu(false);
                       }}
-                      className={`w-full flex items-center gap-2 text-left px-3 py-1.5 text-sm ${isDark ? 'text-gray-300 hover:bg-[#35373c]' : 'text-gray-700 hover:bg-gray-100'}`}
+                      className={`w-full flex items-center gap-2 text-left px-3 py-1.5 text-sm ${theme.textSecondary} ${theme.bgHover}`}
                     >
                       <Icons.eyeOff className="w-4 h-4" />
                       {t('messages.actions.deleteForMe')}
                     </button>
 
-                    {/* ← pin кнопка тут, всередині меню */}
                     <button
                       onClick={() => {
                         onPin(message._id, message.isPinned);
                         setShowMenu(false);
                       }}
-                      className={`w-full flex items-center gap-2 text-left px-3 py-1.5 text-sm ${isDark ? 'text-gray-300 hover:bg-[#35373c]' : 'text-gray-700 hover:bg-gray-100'}`}
+                      className={`w-full flex items-center gap-2 text-left px-3 py-1.5 text-sm ${theme.textSecondary} ${theme.bgHover}`}
                     >
                       {message.isPinned ? (
                         <>
@@ -320,16 +294,13 @@ export function MessageItem({
               <p className="text-[11px] text-[#5865f2] font-medium">
                 {message.replyTo.senderUsername}
               </p>
-              <p
-                className={`text-[11px] truncate ${isDark ? 'text-gray-500' : 'text-gray-400'}`}
-              >
+              <p className={`text-[11px] truncate ${theme.textFaint}`}>
                 {message.replyTo.text}
               </p>
             </div>
           </div>
         )}
 
-        {/* текст або режим редагування */}
         {isEditing ? (
           <div className="flex gap-2 mt-1">
             <input

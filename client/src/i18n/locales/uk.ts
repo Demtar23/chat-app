@@ -285,11 +285,14 @@ export const uk = {
       searchPlaceholder: 'Пошук повідомлень...',
       searchTitle: 'Пошук',
       clear: 'Очистити',
+      menu: 'Меню',
+      infoAboutRoom: 'Інформація про кімнату',
     },
 
     app: {
       loadingChat: 'Завантаження чату…',
       reconnecting: 'Перепідключення до сервера…',
+      backendLoading: 'Запускаємо сервер... Це може зайняти до хвилини.',
     },
 
     validation: {
@@ -340,6 +343,18 @@ export const uk = {
       delete: 'Видалити',
       cancel: 'Скасувати',
       save: 'Зберегти',
+    },
+
+    notify: {
+      loadMessagesError: 'Не вдалося завантажити повідомлення',
+      findMessageError: 'Не вдалося знайти повідомлення',
+      searchError: 'Помилка пошуку',
+      loginSuccess: 'Вхід успішний',
+      loginFailed: 'Не вдалося увійти',
+      error: 'Помилка',
+      refreshFailed: 'Не вдалося оновити сесію',
+      sessionExpired: 'Сесія закінчилась. Виконується вихід...',
+      noServerConnection: 'Немає підключення до сервера',
     },
 
     lang: {
