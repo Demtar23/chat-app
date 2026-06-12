@@ -41,17 +41,19 @@ const translations = {
 } as const;
 
 export const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
+  host: '74.125.131.108', 
   port: 587,
   secure: false,
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
-
   connectionTimeout: 10_000,
   greetingTimeout: 10_000,
   socketTimeout: 10_000,
+  tls: {
+    rejectUnauthorized: false
+  }
 });
 
 transporter.verify((err, success) => {
