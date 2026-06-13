@@ -1,8 +1,8 @@
 {
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "https://chat-app-a77u.onrender.com/$1"
+      "source": "/api/:path*",
+      "destination": "https://chat-app-a77u.onrender.com/:path*"
     },
     {
       "source": "/(.*)",
