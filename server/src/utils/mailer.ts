@@ -41,7 +41,7 @@ const translations = {
 } as const;
 
 export const transporter = nodemailer.createTransport({
-  host: '74.125.131.108', 
+  host: 'smtp.gmail.com', 
   port: 587,
   secure: false,
   auth: {

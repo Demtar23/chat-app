@@ -1,17 +1,17 @@
 import type { UserProfile } from '../types/user';
 import { fetchWithAuth } from './fetchWithAuth';
 
-const API_URL = import.meta.env.VITE_API_URL;
+// const API_URL = import.meta.env.VITE_API_URL;
 
 export async function fetchAllUsers(token: string): Promise<UserProfile[]> {
-  const res = await fetchWithAuth(`${API_URL}/user/all`, {}, token);
+  const res = await fetchWithAuth(`/api/user/all`, {}, token);
 
   if (!res.ok) throw new Error('Failed to fetch users');
   return res.json();
 }
 
 export async function fetchMe(token: string): Promise<UserProfile> {
-  const res = await fetchWithAuth(`${API_URL}/user/me`, {}, token);
+  const res = await fetchWithAuth(`/api/user/me`, {}, token);
 
   if (!res.ok) throw new Error('Failed to fetch profile');
   return res.json();
@@ -22,7 +22,7 @@ export async function updateMe(
   data: { bio?: string; avatar?: string | null; bannerColor?: string | null },
 ): Promise<UserProfile> {
   const res = await fetchWithAuth(
-    `${API_URL}/user/me`,
+    `/api/user/me`,
     {
       method: 'PATCH',
       body: JSON.stringify(data),
@@ -42,7 +42,7 @@ export async function uploadAvatar(
   formData.append('avatar', file);
 
   const res = await fetchWithAuth(
-    `${API_URL}/user/me/avatar`,
+    `/api/user/me/avatar`,
     {
       method: 'POST',
       body: formData,
@@ -60,7 +60,7 @@ export async function uploadAvatar(
 
 export async function deleteAvatarApi(token: string): Promise<void> {
   const res = await fetchWithAuth(
-    `${API_URL}/user/me/avatar`,
+    `/api/user/me/avatar`,
     { method: 'DELETE' },
     token,
   );

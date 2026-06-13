@@ -1,7 +1,7 @@
 import { fetchWithAuth } from './fetchWithAuth';
 import i18n from '../i18n';
 
-const API_URL = import.meta.env.VITE_API_URL;
+// const API_URL = import.meta.env.VITE_API_URL;
 
 type AuthResponse = {
   user: {
@@ -16,7 +16,7 @@ export async function apiRegister(
   email: string,
   password: string,
 ) {
-  const res = await fetch(`${API_URL}/auth/register`, {
+  const res = await fetch(`/api/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -35,7 +35,7 @@ export async function apiLogin(
   email: string,
   password: string,
 ): Promise<AuthResponse> {
-  const res = await fetch(`${API_URL}/auth/login`, {
+  const res = await fetch(`/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -51,7 +51,7 @@ export async function apiLogin(
 }
 
 export async function apiRefresh(): Promise<AuthResponse> {
-  const res = await fetch(`${API_URL}/auth/refresh`, {
+  const res = await fetch(`/api/auth/refresh`, {
     method: 'POST',
     credentials: 'include',
   });
@@ -64,14 +64,14 @@ export async function apiRefresh(): Promise<AuthResponse> {
 }
 
 export async function apiLogout(): Promise<void> {
-  await fetch(`${API_URL}/auth/logout`, {
+  await fetch(`/api/auth/logout`, {
     method: 'POST',
     credentials: 'include',
   });
 }
 
 export async function apiVerifyEmail(token: string): Promise<AuthResponse> {
-  const res = await fetch(`${API_URL}/auth/verify-email/${token}`);
+  const res = await fetch(`/api/auth/verify-email/${token}`);
 
   if (!res.ok) {
     const error = await res.json();
@@ -87,7 +87,7 @@ export async function apiChangePassword(
   accessToken: string,
 ): Promise<void> {
   const res = await fetchWithAuth(
-    `${API_URL}/auth/change-password`,
+    `/api/auth/change-password`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -103,7 +103,7 @@ export async function apiChangePassword(
 }
 
 export async function apiForgotPassword(email: string): Promise<void> {
-  const res = await fetch(`${API_URL}/auth/forgot-password`, {
+  const res = await fetch(`/api/auth/forgot-password`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, locale: i18n.language }),
@@ -119,7 +119,7 @@ export async function apiResetPassword(
   token: string,
   newPassword: string,
 ): Promise<void> {
-  const res = await fetch(`${API_URL}/auth/reset-password/${token}`, {
+  const res = await fetch(`/api/auth/reset-password/${token}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ newPassword }),
