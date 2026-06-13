@@ -52,23 +52,23 @@ export function initSocket(io: Server) {
       socket.emit('online_users', Array.from(onlineUsers.values()));
     });
 
-    socket.on('disconnect', async (reason) => {
-      console.log(
-        '[DISCONNECT]',
-        user.id,
-        user.username,
-        authSocket.id,
-        reason,
-      );
+    socket.on('disconnect', async () => {
+      const currentOnlineUser = onlineUsers.get(user.id);
 
-      console.log('[MAP ENTRY BEFORE DELETE]', onlineUsers.get(user.id));
+      if (currentOnlineUser?.socketId === authSocket.id) {
+        console.log('[DELETE USER]', user.id);
 
-      console.log('[ONLINE BEFORE DELETE]', Array.from(onlineUsers.values()));
-      onlineUsers.delete(user.id);
+        onlineUsers.delete(user.id);
 
-      console.log('[ONLINE AFTER DELETE]', Array.from(onlineUsers.values()));
-
-      io.emit('online_users', Array.from(onlineUsers.values()));
+        io.emit('online_users', Array.from(onlineUsers.values()));
+      } else {
+        console.log(
+          '[SKIP DELETE]',
+          authSocket.id,
+          '!=',
+          currentOnlineUser?.socketId,
+        );
+      }
 
       await userService.updateLastSeen(user.id);
     });
