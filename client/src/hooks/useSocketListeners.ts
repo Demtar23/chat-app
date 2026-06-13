@@ -58,6 +58,11 @@ export function useSocketListeners({
 
     socket.on('online_users', setOnlineUsers);
     if (socket.connected) socket.emit('online_users:request');
+    else {
+      socket.once('connect', () => {
+        socket.emit('online_users:request');
+      });
+    }
 
     socket.on('room:created', (room: Room) => {
       setRooms((prev) => {
