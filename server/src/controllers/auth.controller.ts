@@ -128,7 +128,6 @@ async function refresh(req: Request, res: Response) {
   console.log('PARSED COOKIES:', req.cookies);
 
   const refreshToken = req.cookies?.refreshToken ?? '';
-  const refreshToken = req.cookies?.refreshToken ?? '';
 
   if (!refreshToken) {
     throw new UnauthorizedError('No refresh token');
