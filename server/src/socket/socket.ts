@@ -23,6 +23,8 @@ export function initSocket(io: Server) {
       return;
     }
 
+    console.log('[CONNECT]', user.id, user.username, authSocket.id);
+
     await messagesService.markAsDelivered(user.id);
 
     onlineUsers.set(user.id, {
@@ -30,6 +32,8 @@ export function initSocket(io: Server) {
       userName: user.username,
       socketId: authSocket.id,
     });
+
+    console.log('[ONLINE AFTER CONNECT]', Array.from(onlineUsers.values()));
 
     io.emit('online_users', Array.from(onlineUsers.values()));
 
@@ -48,8 +52,21 @@ export function initSocket(io: Server) {
       socket.emit('online_users', Array.from(onlineUsers.values()));
     });
 
-    socket.on('disconnect', async () => {
+    socket.on('disconnect', async (reason) => {
+      console.log(
+        '[DISCONNECT]',
+        user.id,
+        user.username,
+        authSocket.id,
+        reason,
+      );
+
+      console.log('[MAP ENTRY BEFORE DELETE]', onlineUsers.get(user.id));
+
+      console.log('[ONLINE BEFORE DELETE]', Array.from(onlineUsers.values()));
       onlineUsers.delete(user.id);
+
+      console.log('[ONLINE AFTER DELETE]', Array.from(onlineUsers.values()));
 
       io.emit('online_users', Array.from(onlineUsers.values()));
 
