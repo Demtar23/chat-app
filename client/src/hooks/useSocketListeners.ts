@@ -57,12 +57,11 @@ export function useSocketListeners({
     const token = accessToken;
 
     socket.on('online_users', setOnlineUsers);
-    if (socket.connected) socket.emit('online_users:request');
-    else {
-      socket.once('connect', () => {
-        socket.emit('online_users:request');
-      });
-    }
+
+    socket.emit('online_users:request');
+    socket.on('connect', () => {
+      socket.emit('online_users:request');
+    });
 
     socket.on('room:created', (room: Room) => {
       setRooms((prev) => {
@@ -242,6 +241,7 @@ export function useSocketListeners({
     return () => {
       [
         'online_users',
+        'connect',
         'room:created',
         'room:updated',
         'room:deleted',
