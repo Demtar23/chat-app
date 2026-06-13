@@ -124,6 +124,10 @@ async function changePassword(req: Request, res: Response) {
 }
 
 async function refresh(req: Request, res: Response) {
+  console.log('COOKIE HEADER:', req.headers.cookie);
+  console.log('PARSED COOKIES:', req.cookies);
+
+  const refreshToken = req.cookies?.refreshToken ?? '';
   const refreshToken = req.cookies?.refreshToken ?? '';
 
   if (!refreshToken) {
