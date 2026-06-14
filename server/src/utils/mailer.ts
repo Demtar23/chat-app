@@ -1,7 +1,10 @@
-import nodemailer from 'nodemailer';
+import axios from 'axios';
 
 type Locale = 'uk' | 'en';
 
+/**
+ * TRANSLATIONS
+ */
 const translations = {
   uk: {
     activationSubject: 'Підтвердження email — ChatApp',
@@ -40,50 +43,40 @@ const translations = {
   },
 } as const;
 
-export const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com', 
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-  connectionTimeout: 10_000,
-  greetingTimeout: 10_000,
-  socketTimeout: 10_000,
-  tls: {
-    rejectUnauthorized: false
-  }
-});
-
-transporter.verify((err, success) => {
-  if (err) {
-    console.error('❌ SMTP connection failed:', err.message);
-  } else {
-    console.log('✅ SMTP ready to send emails');
-  }
-});
-
+/**
+ * CORE SEND FUNCTION (BREVO HTTP API)
+ */
 export const send = async (email: string, subject: string, html: string) => {
   try {
-    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-      throw new Error('SMTP env variables are missing');
-    }
+    await axios.post(
+      'https://api.brevo.com/v3/smtp/email',
+      {
+        sender: {
+          name: 'ChatApp',
+          email: process.env.FROM_EMAIL!,
+        },
+        to: [{ email }],
+        subject,
+        htmlContent: html,
+      },
+      {
+        headers: {
+          'api-key': process.env.BREVO_API_KEY!,
+          'content-type': 'application/json',
+        },
+      },
+    );
 
-    const result = await transporter.sendMail({
-      from: `"ChatApp" <${process.env.SMTP_USER}>`,
-      to: email,
-      subject,
-      html,
-    });
-
-    return result;
+    console.log(`✅ Email sent to ${email}`);
   } catch (err) {
     console.error('❌ EMAIL SEND FAILED:', err);
     throw err;
   }
 };
 
+/**
+ * ACTIVATION EMAIL
+ */
 export const sendActivationLink = (
   email: string,
   activationToken: string,
@@ -139,6 +132,9 @@ export const sendActivationLink = (
   return send(email, t.activationSubject, html);
 };
 
+/**
+ * RESET PASSWORD EMAIL
+ */
 export const sendResetLink = (
   email: string,
   resetToken: string,
@@ -153,7 +149,6 @@ export const sendResetLink = (
       <tr>
         <td align="center">
           <table width="480" style="background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb;">
-
             <tr>
               <td style="background:#ed4245;padding:28px;text-align:center;">
                 <h1 style="margin:0;color:white;font-size:22px;">💬 ChatApp</h1>
@@ -195,6 +190,9 @@ export const sendResetLink = (
   return send(email, t.resetSubject, html);
 };
 
+/**
+ * EXPORT
+ */
 export const mailer = {
   send,
   sendActivationLink,
