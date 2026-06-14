@@ -1,7 +1,7 @@
 import type { Message } from '../types/message';
 import { fetchWithAuth } from './fetchWithAuth';
 
-// const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL;
 
 export async function fetchGlobalMessages(
   token: string,
@@ -11,7 +11,7 @@ export async function fetchGlobalMessages(
   if (beforeId) params.append('before', beforeId);
 
   const res = await fetchWithAuth(
-    `/api/messages/global?${params}`,
+    `${API_URL}/messages/global?${params}`,
     {},
     token,
   );
@@ -28,7 +28,7 @@ export async function fetchRoomMessages(
   if (beforeId) params.append('before', beforeId);
 
   const res = await fetchWithAuth(
-    `/api/messages/room/${roomId}?${params}`,
+    `${API_URL}/messages/room/${roomId}?${params}`,
     {},
     token,
   );
@@ -45,7 +45,7 @@ export async function fetchPrivateMessages(
   if (beforeId) params.append('before', beforeId);
 
   const res = await fetchWithAuth(
-    `/api/messages/private/${userId}?${params}`,
+    `${API_URL}/messages/private/${userId}?${params}`,
     {},
     token,
   );
@@ -65,7 +65,7 @@ export async function fetchMessagesAround(
   if (userId) params.append('userId', userId);
 
   const res = await fetchWithAuth(
-    `/api/messages/around/${messageId}?${params}`,
+    `${API_URL}/messages/around/${messageId}?${params}`,
     {},
     token,
   );
@@ -84,7 +84,7 @@ export async function fetchPinnedMessages(
   if (userId) params.append('userId', userId);
 
   const res = await fetchWithAuth(
-    `/api/messages/pinned?${params}`,
+    `${API_URL}/messages/pinned?${params}`,
     {},
     token,
   );
@@ -104,7 +104,7 @@ export async function searchMessages(
   if (userId) params.append('userId', userId);
 
   const res = await fetchWithAuth(
-    `/api/messages/search?${params}`,
+    `${API_URL}/messages/search?${params}`,
     {},
     token,
   );
