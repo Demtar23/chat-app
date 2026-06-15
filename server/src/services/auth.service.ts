@@ -17,7 +17,7 @@ async function findUserById(id: string) {
 async function createUser(username: string, email: string, password: string) {
   const hashedPassword = await bcrypt.hash(password, 10);
   const emailVerificationToken = crypto.randomBytes(32).toString('hex');
-  const emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 год
+  const emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
   return User.create({
     username,

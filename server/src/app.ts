@@ -21,13 +21,6 @@ app.use(
 app.use(express.json());
 
 app.use(cookieParser());
-app.use((req, res, next) => {
-  console.log('========== REQUEST ==========');
-  console.log(req.method, req.originalUrl);
-  console.log('Origin:', req.headers.origin);
-  console.log('Cookie:', req.headers.cookie);
-  next();
-});
 
 app.use(passport.initialize());
 

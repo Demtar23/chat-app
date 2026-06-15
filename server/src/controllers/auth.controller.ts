@@ -44,7 +44,6 @@ async function register(req: Request, res: Response) {
 }
 
 async function login(req: Request, res: Response) {
-  console.log('========== NORMAL LOGIN ==========');
   const { email, password } = req.body;
 
   const user = await usersService.findUserByEmail(email);
@@ -74,12 +73,7 @@ async function login(req: Request, res: Response) {
   const accessToken = jwt.generateAccessToken(payload);
   const refreshToken = jwt.generateRefreshToken(payload);
 
-  console.log('COOKIE_OPTIONS:', COOKIE_OPTIONS);
-
   res.cookie('refreshToken', refreshToken, COOKIE_OPTIONS);
-  console.log('SET-COOKIE HEADER:', res.getHeader('Set-Cookie'));
-
-  console.log('COOKIE SET IN LOGIN');
 
   return res.status(200).json({
     user: {
@@ -130,28 +124,11 @@ async function changePassword(req: Request, res: Response) {
 }
 
 async function refresh(req: Request, res: Response) {
-  console.log('========== REFRESH ==========');
-
-  console.log('HEADERS COOKIE:', req.headers.cookie);
-
-  console.log('PARSED COOKIES:', req.cookies);
-
-  console.log('ORIGIN:', req.headers.origin);
-
-  console.log('REFERER:', req.headers.referer);
-
-  console.log('HOST:', req.headers.host);
-
   const refreshToken = req.cookies?.refreshToken ?? '';
 
-  console.log('HAS REFRESH TOKEN:', !!refreshToken);
-
   if (!refreshToken) {
-    console.log('NO REFRESH TOKEN FOUND');
     throw new UnauthorizedError('No refresh token');
   }
-
-  console.log('TOKEN LENGTH:', refreshToken.length);
 
   const userData = jwt.validateRefreshToken(refreshToken);
 
@@ -220,15 +197,9 @@ async function resetPassword(req: Request, res: Response) {
 }
 
 async function googleCallback(req: Request, res: Response) {
-  console.log('========== GOOGLE CALLBACK ==========');
-  console.log('NODE_ENV:', process.env.NODE_ENV);
-  console.log('CLIENT_URL:', process.env.CLIENT_URL);
-  console.log('req.user:', req.user);
   const data = req.user as unknown as
     | { isNewGoogleUser: false; _id: string; username: string }
     | { isNewGoogleUser: true; email: string; avatar: string | null };
-
-  console.log('isNewGoogleUser:', data.isNewGoogleUser);
 
   if (data.isNewGoogleUser) {
     const setupToken = jwt.generateSetupToken({
@@ -244,18 +215,9 @@ async function googleCallback(req: Request, res: Response) {
   const accessToken = jwt.generateAccessToken(payload);
   const refreshToken = jwt.generateRefreshToken(payload);
 
-  console.log('COOKIE_OPTIONS:', COOKIE_OPTIONS);
-  console.log('REFRESH TOKEN LENGTH:', refreshToken.length);
-
-  console.log('SETTING COOKIE NOW');
-
   res.cookie('refreshToken', refreshToken, COOKIE_OPTIONS);
-  console.log('COOKIE SET');
-  console.log('SET-COOKIE HEADER:', res.getHeader('Set-Cookie'));
 
   const redirectUrl = `${process.env.CLIENT_URL}/auth/callback?token=${accessToken}&refresh=${refreshToken}`;
-
-  console.log('REDIRECT URL:', redirectUrl);
 
   return res.redirect(redirectUrl);
 }

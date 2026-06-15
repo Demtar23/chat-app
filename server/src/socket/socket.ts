@@ -23,8 +23,6 @@ export function initSocket(io: Server) {
       return;
     }
 
-    console.log('[CONNECT]', user.id, user.username, authSocket.id);
-
     await messagesService.markAsDelivered(user.id);
 
     onlineUsers.set(user.id, {
@@ -32,8 +30,6 @@ export function initSocket(io: Server) {
       userName: user.username,
       socketId: authSocket.id,
     });
-
-    console.log('[ONLINE AFTER CONNECT]', Array.from(onlineUsers.values()));
 
     io.emit('online_users', Array.from(onlineUsers.values()));
 
@@ -56,18 +52,9 @@ export function initSocket(io: Server) {
       const currentOnlineUser = onlineUsers.get(user.id);
 
       if (currentOnlineUser?.socketId === authSocket.id) {
-        console.log('[DELETE USER]', user.id);
-
         onlineUsers.delete(user.id);
 
         io.emit('online_users', Array.from(onlineUsers.values()));
-      } else {
-        console.log(
-          '[SKIP DELETE]',
-          authSocket.id,
-          '!=',
-          currentOnlineUser?.socketId,
-        );
       }
 
       await userService.updateLastSeen(user.id);

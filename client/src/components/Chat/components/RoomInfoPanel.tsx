@@ -64,7 +64,6 @@ export function RoomInfoPanel({
     try {
       await updateRoom(accessToken, room._id, descValue.trim());
       setIsEditingDesc(false);
-      // room:updated прийде через socket
     } catch {
       notify.error(t('roomInfo.descriptionUpdateError'));
     } finally {
@@ -76,7 +75,6 @@ export function RoomInfoPanel({
     <div
       className={`flex flex-col ${fullWidth ? 'flex-1 w-full' : 'w-64'} flex-shrink-0 border-l overflow-y-auto transition-colors duration-200 ${theme.bgSecondary} ${theme.border}`}
     >
-      {/* Header */}
       <div
         className={`flex items-center justify-between px-4 py-3 border-b ${theme.border}`}
       >
@@ -94,7 +92,6 @@ export function RoomInfoPanel({
       </div>
 
       <div className="flex flex-col gap-4 p-4">
-        {/* Назва */}
         <div>
           <p
             className={`text-[10px] tracking-widest font-semibold mb-1 ${theme.textMuted}`}
@@ -111,7 +108,6 @@ export function RoomInfoPanel({
           </p>
         </div>
 
-        {/* Опис */}
         <div>
           <div className="flex items-center justify-between mb-1">
             <p
@@ -177,7 +173,6 @@ export function RoomInfoPanel({
           )}
         </div>
 
-        {/* Дата створення */}
         <div>
           <p
             className={`text-[10px] tracking-widest font-semibold mb-1 ${theme.textMuted}`}
@@ -192,7 +187,6 @@ export function RoomInfoPanel({
           )}
         </div>
 
-        {/* Учасники */}
         <div>
           <p
             className={`text-[10px] tracking-widest font-semibold mb-2 ${theme.textMuted}`}
@@ -240,7 +234,6 @@ export function RoomInfoPanel({
           </div>
         </div>
 
-        {/* Дії */}
         <div className="flex flex-col gap-2 mt-2">
           {!isMember && (
             <button

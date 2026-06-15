@@ -45,8 +45,6 @@ export function GoogleCallbackPage() {
     try {
       const parts = token.split('.');
       const payload = JSON.parse(atob(parts[1]));
-
-      // зберігаємо refresh через наш proxy (той самий домен)
       fetch(`${import.meta.env.VITE_API_URL}/auth/set-refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

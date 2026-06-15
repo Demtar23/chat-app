@@ -175,7 +175,6 @@ export function MessageList({
           const rect = el.getBoundingClientRect();
           if (rect.top < containerRect.top + 50) activeIndex = index;
         } else if (lastVisibleMessage) {
-
           if (
             new Date(pinnedMsg.createdAt) <=
             new Date(lastVisibleMessage.createdAt)
@@ -212,6 +211,16 @@ export function MessageList({
     hasScrolledInitiallyRef.current = false;
   }, [chatKey]);
 
+  useEffect(() => {
+    if (messages.length === 0 || isLoadingMore) return;
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage.senderId === currentUserId) {
+      requestAnimationFrame(() => {
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+      });
+    }
+  }, [messages.length]);
+
   return (
     <div
       ref={containerRef}
@@ -236,13 +245,17 @@ export function MessageList({
         <>
           {isLoadingMore && (
             <div className="flex justify-center py-2">
-              <span className={`text-xs ${theme.textFaint}`}>{t('messages.loading')}</span>
+              <span className={`text-xs ${theme.textFaint}`}>
+                {t('messages.loading')}
+              </span>
             </div>
           )}
 
           {!hasMore && (
             <div className="flex justify-center py-2">
-              <span className={`text-xs ${theme.textFaint}`}>{t('emptyChat.privateTitle')}</span>
+              <span className={`text-xs ${theme.textFaint}`}>
+                {t('emptyChat.privateTitle')}
+              </span>
             </div>
           )}
 

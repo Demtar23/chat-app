@@ -38,7 +38,7 @@ export const en = {
       checkEmail: 'Check your email',
       checkEmailDesc: 'We sent a letter to',
       checkEmailDesc2:
-        '. Click the link in the email to activate your account.',
+        "Click the link in the email to activate your account. If you don't see it - check your Spam folder.",
       googleAccountExists: 'An account with this Google email already exists.',
     },
 
@@ -49,7 +49,8 @@ export const en = {
       sending: 'Sending...',
       sentTitle: 'Check your email',
       sentDesc: 'If an account with',
-      sentDesc2: 'exists, we sent reset instructions.',
+      sentDesc2:
+        "exists, we sent reset instructions. If you don't see it - check your Spam folder.",
       errorMsg: 'Something went wrong',
     },
 

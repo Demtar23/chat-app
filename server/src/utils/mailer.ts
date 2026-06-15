@@ -2,9 +2,6 @@ import axios from 'axios';
 
 type Locale = 'uk' | 'en';
 
-/**
- * TRANSLATIONS
- */
 const translations = {
   uk: {
     activationSubject: 'Підтвердження email — ChatApp',
@@ -43,9 +40,6 @@ const translations = {
   },
 } as const;
 
-/**
- * CORE SEND FUNCTION (BREVO HTTP API)
- */
 export const send = async (email: string, subject: string, html: string) => {
   try {
     await axios.post(
@@ -66,17 +60,12 @@ export const send = async (email: string, subject: string, html: string) => {
         },
       },
     );
-
-    console.log(`✅ Email sent to ${email}`);
   } catch (err) {
     console.error('❌ EMAIL SEND FAILED:', err);
     throw err;
   }
 };
 
-/**
- * ACTIVATION EMAIL
- */
 export const sendActivationLink = (
   email: string,
   activationToken: string,
@@ -132,9 +121,6 @@ export const sendActivationLink = (
   return send(email, t.activationSubject, html);
 };
 
-/**
- * RESET PASSWORD EMAIL
- */
 export const sendResetLink = (
   email: string,
   resetToken: string,
@@ -190,9 +176,6 @@ export const sendResetLink = (
   return send(email, t.resetSubject, html);
 };
 
-/**
- * EXPORT
- */
 export const mailer = {
   send,
   sendActivationLink,

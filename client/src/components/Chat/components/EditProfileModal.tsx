@@ -285,7 +285,6 @@ export function EditProfileModal({
         className={`w-full max-w-sm rounded-lg overflow-y-auto max-h-[90vh] ${theme.bgSecondary}`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* tabs */}
         <div className={`flex border-b ${theme.border}`}>
           {(['profile', 'password'] as Tab[]).map((tab) => (
             <button
