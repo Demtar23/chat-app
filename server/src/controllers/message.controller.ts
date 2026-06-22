@@ -128,12 +128,15 @@ async function getPinnedMessages(req: Request, res: Response) {
   const { type, roomId, userId } = req.query;
   const { id: currentUserId } = req.user!;
 
-  const messages = await messagesService.getPinnedMessages({
-    type: type as 'global' | 'room' | 'private',
-    roomId: roomId as string | undefined,
-    senderId: currentUserId,
-    receiverId: userId as string | undefined,
-  });
+  const messages = await messagesService.getPinnedMessages(
+    {
+      type: type as 'global' | 'room' | 'private',
+      roomId: roomId as string | undefined,
+      senderId: currentUserId,
+      receiverId: userId as string | undefined,
+    },
+    currentUserId,
+  );
 
   return res.status(200).json(messages);
 }
@@ -150,29 +153,40 @@ async function searchMessages(req: Request, res: Response) {
     throw new ValidationError('Invalid chat type');
   }
 
-  const messages = await messagesService.searchMessages({
-    type: type as 'global' | 'room' | 'private',
-    query: q.trim(),
-    roomId: roomId as string | undefined,
-    senderId: currentUserId,
-    receiverId: userId as string | undefined,
-  });
+  const messages = await messagesService.searchMessages(
+    {
+      type: type as 'global' | 'room' | 'private',
+      query: q.trim(),
+      roomId: roomId as string | undefined,
+      senderId: currentUserId,
+      receiverId: userId as string | undefined,
+    },
+    currentUserId,
+  );
 
   return res.status(200).json(messages);
 }
 
 async function getGlobalMessagesCursor(req: Request, res: Response) {
   const beforeId = req.query.before as string | undefined;
-  const messages = await messagesService.getGlobalMessagesBefore(beforeId);
+  const { id: userId } = req.user!;
+  const messages = await messagesService.getGlobalMessagesBefore(
+    beforeId,
+    30,
+    userId,
+  );
   return res.status(200).json(messages);
 }
 
 async function getRoomMessagesCursor(req: Request, res: Response) {
   const roomId = req.params.roomId as string;
   const beforeId = req.query.before as string | undefined;
+  const { id: userId } = req.user!;
   const messages = await messagesService.getRoomMessagesBefore(
     roomId,
     beforeId,
+    30,
+    userId,
   );
   return res.status(200).json(messages);
 }
@@ -185,6 +199,8 @@ async function getPrivateMessagesCursor(req: Request, res: Response) {
     currentUserId,
     userId,
     beforeId,
+    30,
+    currentUserId,
   );
   return res.status(200).json(messages);
 }
@@ -202,12 +218,17 @@ async function getMessagesAround(req: Request, res: Response) {
     throw new ValidationError('Invalid chat type');
   }
 
-  const messages = await messagesService.getMessagesAround(messageId, {
-    type: type as 'global' | 'room' | 'private',
-    roomId: roomId as string | undefined,
-    senderId: currentUserId,
-    receiverId: userId as string | undefined,
-  });
+  const messages = await messagesService.getMessagesAround(
+    messageId,
+    {
+      type: type as 'global' | 'room' | 'private',
+      roomId: roomId as string | undefined,
+      senderId: currentUserId,
+      receiverId: userId as string | undefined,
+    },
+    30,
+    currentUserId,
+  );
 
   return res.status(200).json(messages);
 }

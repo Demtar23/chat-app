@@ -181,12 +181,15 @@ async function unpinMessage(messageId: string) {
   );
 }
 
-async function getPinnedMessages(filter: {
-  type: 'global' | 'room' | 'private';
-  roomId?: string;
-  senderId?: string;
-  receiverId?: string;
-}) {
+async function getPinnedMessages(
+  filter: {
+    type: 'global' | 'room' | 'private';
+    roomId?: string;
+    senderId?: string;
+    receiverId?: string;
+  },
+  userId?: string,
+) {
   const query: Record<string, unknown> = {
     isPinned: true,
     type: filter.type,
@@ -201,6 +204,10 @@ async function getPinnedMessages(filter: {
     ];
   }
 
+  if (userId) {
+    query.deletedFor = { $ne: userId };
+  }
+
   return Message.find(query).sort({ createdAt: 1 });
 }
 
@@ -208,14 +215,17 @@ function escapeRegex(str: string) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-async function searchMessages(filter: {
-  type: 'global' | 'room' | 'private';
-  query: string;
-  roomId?: string;
-  senderId?: string;
-  receiverId?: string;
-  limit?: number;
-}) {
+async function searchMessages(
+  filter: {
+    type: 'global' | 'room' | 'private';
+    query: string;
+    roomId?: string;
+    senderId?: string;
+    receiverId?: string;
+    limit?: number;
+  },
+  userId?: string,
+) {
   const query: Record<string, unknown> = {
     type: filter.type,
     isDeleted: false,
@@ -234,16 +244,29 @@ async function searchMessages(filter: {
     ];
   }
 
+  if (userId) {
+    query.deletedFor = { $ne: userId };
+  }
+
   return Message.find(query)
     .sort({ createdAt: -1 })
     .limit(filter.limit ?? 20);
 }
 
-async function getGlobalMessagesBefore(beforeId?: string, limit = 30) {
+async function getGlobalMessagesBefore(
+  beforeId?: string,
+  limit = 30,
+  userId?: string,
+) {
   const query: Record<string, unknown> = { type: 'global' };
   if (beforeId) {
     query._id = { $lt: beforeId };
   }
+
+  if (userId) {
+    query.deletedFor = { $ne: userId };
+  }
+
   return Message.find(query)
     .sort({ _id: -1 })
     .limit(limit)
@@ -254,10 +277,15 @@ async function getRoomMessagesBefore(
   roomId: string,
   beforeId?: string,
   limit = 30,
+  userId?: string,
 ) {
   const query: Record<string, unknown> = { type: 'room', roomId };
   if (beforeId) {
     query._id = { $lt: beforeId };
+  }
+
+  if (userId) {
+    query.deletedFor = { $ne: userId };
   }
   return Message.find(query)
     .sort({ _id: -1 })
@@ -270,6 +298,7 @@ async function getPrivateMessagesBefore(
   receiverId: string,
   beforeId?: string,
   limit = 30,
+  userId?: string,
 ) {
   const query: Record<string, unknown> = {
     type: 'private',
@@ -278,9 +307,15 @@ async function getPrivateMessagesBefore(
       { senderId: receiverId, receiverId: senderId },
     ],
   };
+
   if (beforeId) {
     query._id = { $lt: beforeId };
   }
+
+  if (userId) {
+    query.deletedFor = { $ne: userId };
+  }
+
   return Message.find(query)
     .sort({ _id: -1 })
     .limit(limit)
@@ -296,6 +331,7 @@ async function getMessagesAround(
     receiverId?: string;
   },
   limit = 30,
+  userId?: string,
 ) {
   const half = Math.floor(limit / 2);
   const baseQuery: Record<string, unknown> = { type: filter.type };
@@ -307,6 +343,10 @@ async function getMessagesAround(
       { senderId: filter.senderId, receiverId: filter.receiverId },
       { senderId: filter.receiverId, receiverId: filter.senderId },
     ];
+  }
+
+  if (userId) {
+    baseQuery.deletedFor = { $ne: userId };
   }
 
   const [before, target, after] = await Promise.all([
