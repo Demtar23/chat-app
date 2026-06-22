@@ -95,5 +95,3 @@ authRouter.get(
   }),
   catchError(authController.googleRegisterCallback),
 );
-
-authRouter.post('/set-refresh', catchError(authController.setRefreshToken));

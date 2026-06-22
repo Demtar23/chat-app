@@ -2,7 +2,7 @@ import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { User } from '../models/User';
 
-const SERVER_URL = process.env.SERVER_URL!;
+const CLIENT_URL = process.env.CLIENT_URL!;
 
 passport.use(
   'google',
@@ -10,7 +10,7 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      callbackURL: `${SERVER_URL}/api/auth/google/callback`,
+      callbackURL: `${CLIENT_URL}/api/auth/google/callback`,
     },
     async (_accessToken, _refreshToken, profile, done) => {
       try {
@@ -46,7 +46,7 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      callbackURL: `${SERVER_URL}/api/auth/google/register/callback`,
+      callbackURL: `${CLIENT_URL}/api/auth/google/register/callback`,
     },
     async (_accessToken, _refreshToken, profile, done) => {
       try {

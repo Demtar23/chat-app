@@ -217,9 +217,9 @@ async function googleCallback(req: Request, res: Response) {
 
   res.cookie('refreshToken', refreshToken, COOKIE_OPTIONS);
 
-  const redirectUrl = `${process.env.CLIENT_URL}/auth/callback?token=${accessToken}&refresh=${refreshToken}`;
-
-  return res.redirect(redirectUrl);
+  return res.redirect(
+    `${process.env.CLIENT_URL}/auth/callback`,
+  );
 }
 
 async function setupProfile(req: Request, res: Response) {
@@ -284,16 +284,6 @@ async function googleRegisterCallback(req: Request, res: Response) {
   );
 }
 
-async function setRefreshToken(req: Request, res: Response) {
-  const { refreshToken } = req.body;
-  if (!refreshToken) throw new UnauthorizedError('No refresh token');
-
-  const userData = jwt.validateRefreshToken(refreshToken);
-  if (!userData) throw new UnauthorizedError('Invalid refresh token');
-
-  res.cookie('refreshToken', refreshToken, COOKIE_OPTIONS);
-  return res.status(200).json({ ok: true });
-}
 export const authController = {
   register,
   login,
@@ -306,5 +296,4 @@ export const authController = {
   googleCallback,
   setupProfile,
   googleRegisterCallback,
-  setRefreshToken,
 };

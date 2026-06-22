@@ -1,7 +1,7 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { apiRefresh } from '../api/auth.api';
 import { useThemeContext } from '../context/ThemeContext';
 import { getAuthPage } from '../styles/authPageClasses';
 import { useTranslation } from 'react-i18next';
@@ -18,46 +18,27 @@ export function GoogleCallbackPage() {
   const hasRun = useRef(false);
 
   const errorParam = searchParams.get('error');
-  const token = searchParams.get('token');
-  const refreshToken = searchParams.get('refresh');
 
   const [status, setStatus] = useState<Status>(
-    errorParam || !token ? 'error' : 'loading',
+    errorParam ? 'error' : 'loading',
   );
   const [errorMessage, setErrorMessage] = useState(
-    errorParam
-      ? t('googleCallback.errorGoogle')
-      : !token
-        ? t('googleCallback.errorNoToken')
-        : '',
+    errorParam ? t('googleCallback.errorGoogle') : '',
   );
 
   useEffect(() => {
     if (hasRun.current || status === 'error') return;
     hasRun.current = true;
 
-    if (!token || !refreshToken) {
-      setStatus('error');
-      setErrorMessage(t('googleCallback.errorNoToken'));
-      return;
-    }
-
-    try {
-      const parts = token.split('.');
-      const payload = JSON.parse(atob(parts[1]));
-      fetch(`${import.meta.env.VITE_API_URL}/auth/set-refresh`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ refreshToken }),
-      }).then(() => {
-        login({ id: payload.id, username: payload.username }, token);
+    apiRefresh()
+      .then(({ user, accessToken }) => {
+        login(user, accessToken);
         navigate('/chat');
+      })
+      .catch(() => {
+        setStatus('error');
+        setErrorMessage(t('googleCallback.errorFinish'));
       });
-    } catch {
-      setStatus('error');
-      setErrorMessage(t('googleCallback.errorFinish'));
-    }
   }, []);
 
   if (status === 'error') {
