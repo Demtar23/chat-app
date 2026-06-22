@@ -3,6 +3,7 @@ import { SocketWithUser } from '../../types/socket';
 import { messagesService } from '../../services/message.service';
 import { ReplyTo, SendMessageData } from '../../types/message';
 import { onlineUsers } from '../../state/onlineUsers';
+import { permissionsService } from '../../services/permissions.service';
 
 function emitPrivateEvent(
   io: Server,
@@ -14,9 +15,7 @@ function emitPrivateEvent(
   socket.emit(event, payload);
 
   const peerId =
-    message.senderId === socket.user.id
-      ? message.receiverId
-      : message.senderId;
+    message.senderId === socket.user.id ? message.receiverId : message.senderId;
 
   if (!peerId) {
     return;
@@ -61,6 +60,15 @@ export function messageHandler(io: Server, socket: SocketWithUser) {
         return;
       }
 
+      try {
+        await permissionsService.assertRoomMember(data.roomId, socket.user.id);
+      } catch (err) {
+        socket.emit('room:error', {
+          message: err instanceof Error ? err.message : 'Access denied',
+        });
+        return;
+      }
+
       const message = await messagesService.createMessage({
         text,
         senderId: socket.user.id,
@@ -84,6 +92,18 @@ export function messageHandler(io: Server, socket: SocketWithUser) {
       const text = data.text.trim();
 
       if (!text) {
+        return;
+      }
+
+      if (
+        !permissionsService.canAccessPrivateChat(
+          socket.user.id,
+          data.receiverId,
+        )
+      ) {
+        socket.emit('room:error', {
+          message: 'Cannot send message to yourself',
+        });
         return;
       }
 
@@ -117,6 +137,18 @@ export function messageHandler(io: Server, socket: SocketWithUser) {
         return;
       }
 
+      try {
+        await permissionsService.assertMessageOwner(
+          data.messageId,
+          socket.user.id,
+        );
+      } catch (err) {
+        socket.emit('room:error', {
+          message: err instanceof Error ? err.message : 'Access denied',
+        });
+        return;
+      }
+
       const message = await messagesService.editMessage(
         data.messageId,
         text,
@@ -138,6 +170,18 @@ export function messageHandler(io: Server, socket: SocketWithUser) {
   );
 
   socket.on('message:delete', async (data: { messageId: string }) => {
+    try {
+      await permissionsService.assertMessageOwner(
+        data.messageId,
+        socket.user.id,
+      );
+    } catch (err) {
+      socket.emit('room:error', {
+        message: err instanceof Error ? err.message : 'Access denied',
+      });
+      return;
+    }
+
     const message = await messagesService.deleteMessageForAll(
       data.messageId,
       socket.user.id,
@@ -163,10 +207,21 @@ export function messageHandler(io: Server, socket: SocketWithUser) {
       return;
     }
 
-    if (message.type === 'global') {
-      io.emit('message:pinned', message);
-    } else if (message.type === 'room' && message.roomId) {
+    if (message.type === 'room' && message.roomId) {
+      try {
+        await permissionsService.assertRoomMember(
+          message.roomId.toString(),
+          socket.user.id,
+        );
+      } catch (err) {
+        socket.emit('room:error', {
+          message: err instanceof Error ? err.message : 'Access denied',
+        });
+        return;
+      }
       io.to(message.roomId.toString()).emit('message:pinned', message);
+    } else if (message.type === 'global') {
+      io.emit('message:pinned', message);
     } else if (message.type === 'private') {
       emitPrivateEvent(io, socket, message, 'message:pinned', message);
     }
@@ -179,10 +234,21 @@ export function messageHandler(io: Server, socket: SocketWithUser) {
       return;
     }
 
-    if (message.type === 'global') {
-      io.emit('message:unpinned', message);
-    } else if (message.type === 'room' && message.roomId) {
+    if (message.type === 'room' && message.roomId) {
+      try {
+        await permissionsService.assertRoomMember(
+          message.roomId.toString(),
+          socket.user.id,
+        );
+      } catch (err) {
+        socket.emit('room:error', {
+          message: err instanceof Error ? err.message : 'Access denied',
+        });
+        return;
+      }
       io.to(message.roomId.toString()).emit('message:unpinned', message);
+    } else if (message.type === 'global') {
+      io.emit('message:unpinned', message);
     } else if (message.type === 'private') {
       emitPrivateEvent(io, socket, message, 'message:unpinned', message);
     }

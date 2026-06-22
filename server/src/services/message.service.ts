@@ -363,6 +363,10 @@ async function getMessagesAround(
   return [...before, ...(target ? [target] : []), ...after];
 }
 
+async function getMessageById(messageId: string) {
+  return Message.findById(messageId);
+}
+
 export const messagesService = {
   createMessage,
   getGlobalMessages,
@@ -383,4 +387,5 @@ export const messagesService = {
   getRoomMessagesBefore,
   getPrivateMessagesBefore,
   getMessagesAround,
+  getMessageById,
 };

@@ -1,11 +1,8 @@
 import { Request, Response } from 'express';
 import { roomsService } from '../services/room.service';
-import {
-  ConflictError,
-  ForbiddenError,
-  NotFoundError,
-} from '../errors/AppError';
+import { ConflictError, NotFoundError } from '../errors/AppError';
 import { getIo } from '../socket/socketInstance';
+import { permissionsService } from '../services/permissions.service';
 
 async function createRoom(req: Request, res: Response) {
   const { name, description } = req.body;
@@ -69,11 +66,7 @@ async function leaveRoom(req: Request, res: Response) {
 
   const { id: userId } = req.user!;
 
-  const room = await roomsService.getRoomById(roomId);
-
-  if (!room) {
-    throw new NotFoundError('Room not found');
-  }
+  await permissionsService.assertRoomMember(roomId, userId);
 
   const updatedRoom = await roomsService.leaveRoom(roomId, userId);
 
@@ -87,12 +80,7 @@ async function deleteRoom(req: Request, res: Response) {
   const roomId = req.params.roomId as string;
   const { id: userId } = req.user!;
 
-  const room = await roomsService.getRoomById(roomId);
-  if (!room) throw new NotFoundError('Room not found');
-
-  if (room.createdBy !== userId) {
-    throw new ForbiddenError('Only room owner can delete it');
-  }
+  await permissionsService.assertRoomOwner(roomId, userId);
 
   await roomsService.deleteRoom(roomId);
 
@@ -107,12 +95,7 @@ async function updateRoom(req: Request, res: Response) {
   const { id: userId } = req.user!;
   const { description } = req.body;
 
-  const room = await roomsService.getRoomById(roomId);
-  if (!room) throw new NotFoundError('Room not found');
-
-  if (room.createdBy !== userId) {
-    throw new ForbiddenError('Only room owner can update it');
-  }
+  await permissionsService.assertRoomOwner(roomId, userId);
 
   const updatedRoom = await roomsService.updateRoom(roomId, description ?? '');
 
