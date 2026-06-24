@@ -294,7 +294,7 @@ VITE_IMAGE_KIT_URL=your_api_secret
 
 ### 4. Run locally
 
-#Backend
+**Backend**
 ```bash
 cd server
 npm run dev
