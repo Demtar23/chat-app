@@ -13,6 +13,7 @@ The app includes features such as message reactions, pinning, editing, search, p
 The application is a fullstack monorepo split into two workspaces — `client` and `server` — managed via npm workspaces.
 
 **How it fits together:**
+
 - The frontend communicates with the backend via REST API (HTTP) and WebSockets (Socket.IO)
 - HTTP requests go through a Vercel proxy (`/api/*`) to keep cookies first-party and avoid cross-site blocking
 - WebSocket connection goes directly to the backend on Render
@@ -20,11 +21,13 @@ The application is a fullstack monorepo split into two workspaces — `client` a
 - Auth state lives in React Context; refresh tokens are stored in HTTP-only cookies and never appear in the URL
 
 **Auth flow:**
+
 - Email/password: `POST /api/auth/login` → access token (10min) in response + refresh token (7d) in HTTP-only cookie
 - Google OAuth: Google → Vercel proxy → backend sets cookie → redirects to `/auth/callback` → client calls `/api/auth/refresh`
 - Token refresh happens automatically via `fetchWithAuth` when a 401 response is received
 
 **Storage:**
+
 - MongoDB Atlas — messages, rooms, users
 - Cloudinary — user avatar uploads
 - ImageKit CDN — preset avatar images
@@ -251,6 +254,7 @@ This installs dependencies for both `client` and `server` via npm workspaces.
 Create .env files in both server and client folders.
 
 **`server/.env`**
+
 ```env
 
 PORT=5000
@@ -277,6 +281,7 @@ CLIENT_URL=https://your-frontend.vercel.app
 ```
 
 **`client/.env`**
+
 ```env
 
 VITE_API_URL=https://your-backend.onrender.com
@@ -285,6 +290,7 @@ VITE_IMAGE_KIT_URL=your_api_secret
 ```
 
 > **Required third-party services:**
+>
 > - [MongoDB Atlas](https://www.mongodb.com/atlas) — database
 > - [Google Cloud Console](https://console.cloud.google.com) — OAuth credentials
 > - [Brevo](https://www.brevo.com) — email delivery
@@ -294,41 +300,47 @@ VITE_IMAGE_KIT_URL=your_api_secret
 ### 4. Run locally
 
 **Backend**
+
 ```bash
 cd server
 npm run dev
 ```
 
 **Frontend** (in a separate terminal):
+
 ```bash
 cd client
 npm run dev
 ```
+
 ## 📜 Scripts
 
 ### Root
-| Command | Description |
-|---------|-------------|
-| `npm run lint` | Run ESLint + Prettier check |
-| `npm run lint:fix` | Auto-fix lint issues |
-| `npm run format` | Format all files with Prettier |
+
+| Command            | Description                    |
+| ------------------ | ------------------------------ |
+| `npm run lint`     | Run ESLint + Prettier check    |
+| `npm run lint:fix` | Auto-fix lint issues           |
+| `npm run format`   | Format all files with Prettier |
 
 ### Server (`cd server`)
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start backend in development mode with hot reload |
-| `npm run build` | Compile TypeScript to `dist/` |
-| `npm start` | Start compiled production server |
-| `npm test` | Run backend test suite |
+
+| Command         | Description                                       |
+| --------------- | ------------------------------------------------- |
+| `npm run dev`   | Start backend in development mode with hot reload |
+| `npm run build` | Compile TypeScript to `dist/`                     |
+| `npm start`     | Start compiled production server                  |
+| `npm test`      | Run backend test suite                            |
 
 ### Client (`cd client`)
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start frontend dev server |
-| `npm run build` | Build for production |
-| `npm run preview` | Preview production build locally |
-| `npm test` | Run frontend test suite |
-| `npm run test:watch` | Run tests in watch mode |
+
+| Command              | Description                      |
+| -------------------- | -------------------------------- |
+| `npm run dev`        | Start frontend dev server        |
+| `npm run build`      | Build for production             |
+| `npm run preview`    | Preview production build locally |
+| `npm test`           | Run frontend test suite          |
+| `npm run test:watch` | Run tests in watch mode          |
 
 ## 🧪 Tests
 
@@ -340,6 +352,7 @@ npm test
 ```
 
 Covers:
+
 - `auth.test.ts` — user creation, password hashing, JWT generation and validation
 - `permissions.test.ts` — room membership, room ownership, message ownership checks
 - `messages.test.ts` — delete-for-me filtering, delete-for-all behavior
@@ -354,6 +367,7 @@ npm test
 ```
 
 Covers:
+
 - `ProtectedRoute.test.tsx` — auth loading state, redirect when unauthenticated, render when authenticated
 
 ## ✨ Features
@@ -415,19 +429,18 @@ Covers:
 - Cold start loading state
 - Error handling for API and sockets
 
-
 ## 🔧 Technical Decisions
 
-| Decision | Reason |
-|----------|--------|
-| React + Vite | Fast dev experience, modern tooling, good TypeScript support |
-| Express 5 | Familiar REST framework, async error handling built-in |
-| MongoDB | Flexible schema fits chat data (varied message types, reactions) |
-| Socket.io | Reliable WebSocket abstraction with fallback to polling |
-| JWT + HTTP-only cookies | Stateless auth with XSS protection for refresh tokens |
-| Vercel proxy for API | Avoids cross-site cookie blocking without requiring a custom domain |
-| npm workspaces | Single repo for client and server, shared scripts |
-| Brevo instead of nodemailer | Render free tier blocks outbound SMTP ports |
+| Decision                    | Reason                                                              |
+| --------------------------- | ------------------------------------------------------------------- |
+| React + Vite                | Fast dev experience, modern tooling, good TypeScript support        |
+| Express 5                   | Familiar REST framework, async error handling built-in              |
+| MongoDB                     | Flexible schema fits chat data (varied message types, reactions)    |
+| Socket.io                   | Reliable WebSocket abstraction with fallback to polling             |
+| JWT + HTTP-only cookies     | Stateless auth with XSS protection for refresh tokens               |
+| Vercel proxy for API        | Avoids cross-site cookie blocking without requiring a custom domain |
+| npm workspaces              | Single repo for client and server, shared scripts                   |
+| Brevo instead of nodemailer | Render free tier blocks outbound SMTP ports                         |
 
 ## ⚠️ Known Limitations
 
@@ -442,3 +455,12 @@ This project was built to demonstrate full-stack product development across mult
 - **Most technically challenging:** Google OAuth token flow with cross-site cookie handling across Vercel + Render, and real-time socket reconnect behavior.
 - **Skills demonstrated:** REST API design, WebSocket architecture, auth flows, file uploads, i18n, responsive UI, automated testing, deployment configuration.
 - **Known tradeoffs:** Prioritized feature completeness and architectural clarity over production scalability (no Redis, no message queue, no CI/CD pipeline).
+
+## 🤖 AI Agent Documentation
+
+This repository includes documentation for AI agents and contributors:
+
+- [`CLAUDE.md`](./CLAUDE.md) — entry point for AI agents: project overview, structure, commands, and core rules
+- [`ARCHITECTURE.md`](./ARCHITECTURE.md) — system design: auth flows, WebSocket architecture, REST API reference, database schema
+- [`RULES.md`](./RULES.md) — behavioral rules for AI agents working in this codebase
+- [`STYLE_GUIDE.md`](./STYLE_GUIDE.md) — coding conventions and standards
